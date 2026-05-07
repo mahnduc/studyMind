@@ -3,9 +3,11 @@ import { User } from 'lucide-react';
 
 interface UserMessageProps {
   content: string;
+  isMarkdown?: boolean;
+  isError?: boolean;
 }
 
-export const UserMessage = ({ content }: UserMessageProps) => {
+export const UserMessageComponent = ({ content }: UserMessageProps) => {
   return (
     <div className="flex justify-end mb-8 animate-in fade-in slide-in-from-bottom-3 duration-400">
       <div className="flex gap-4 max-w-[85%] md:max-w-[75%] flex-row-reverse">

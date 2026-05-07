@@ -7,11 +7,12 @@ import {
   GraduationCap, BookOpen, Settings,
   LayoutDashboard, BotMessageSquare,
   ChevronUp, ChevronDown,
-  User,
-  Pencil
+  User
 } from "lucide-react";
 import { Nunito } from 'next/font/google';
 import { UserContext } from "@/context/UserContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -131,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           isHeaderVisible ? "mt-0 opacity-100" : "-mt-16 opacity-0 pointer-events-none"
         }`}>
           <div className="flex items-center gap-4">
-            <h1 className="text-sm font-[800] tracking-wider text-[#2D3436] uppercase">
+            <h1 className="text-sm font-extrabold tracking-wider text-[#2D3436] uppercase">
               XIN CHÀO, <span className="text-[#FF3399]">{userName}</span>
             </h1>
             <button
@@ -171,6 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <main className="flex-1 overflow-y-auto bg-white scroll-smooth flex flex-col">
             <div className="w-full h-full flex-1">
               {children}
+              <ToastContainer />
             </div>
           </main>
         </UserContext.Provider>

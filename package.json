@@ -59,6 +59,7 @@
     "react-hotkeys-hook": "^5.3.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
+    "react-toastify": "^11.1.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^10.0.2",

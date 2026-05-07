@@ -7,6 +7,15 @@ import Link from 'next/link';
 interface BotMessageProps {
   content?: string;
   isLoading?: boolean;
+  isMarkdown?: boolean;
+  isError?: boolean;
+  isAction?: boolean;
+  metadata?: {
+    tokens?: number;
+    model?: string;
+    toolName?: string;
+    thinking?: string;
+  };
 }
 
 export const BotMessage = ({ content, isLoading }: BotMessageProps) => {

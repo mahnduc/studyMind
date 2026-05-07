@@ -1,3 +1,5 @@
+import { toast } from 'react-toastify';
+
 export type KeysSchema = Record<string, string[]>;
 
 const SECRET_FILENAME = "keys.json";
@@ -21,7 +23,6 @@ const createKeyService = () => {
 
     const endpoints: Record<string, string> = {
       groq: "https://api.groq.com/openai/v1/models",
-      // Thêm các provider khác ở đây
     };
 
     const url = endpoints[provider];
@@ -109,10 +110,7 @@ const createKeyService = () => {
       data[provider] = data[provider].filter((k) => k !== key);
       
       // Xóa luôn provider nếu không còn key nào
-      if (data[provider].length === 0) {
-        delete data[provider];
-      }
-
+      if (data[provider].length === 0) {delete data[provider];}
       await this.save(data);
     },
 
@@ -128,14 +126,11 @@ const createKeyService = () => {
 
     async getRandomKey(provider: string): Promise<string | null> {
       const keys = await this.getKeys(provider);
-      
-      if (keys.length === 0) {
-        return null;
-      }
-
+      if (!keys || keys.length === 0) {throw new Error(`MISSING_KEY_${provider.toUpperCase()}`);}
       const randomIndex = Math.floor(Math.random() * keys.length);
       return keys[randomIndex];
-    },
+    }
+
   };
 };
 

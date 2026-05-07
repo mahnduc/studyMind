@@ -21,8 +21,8 @@ export const keyApi = {
     return await keyService.load();
   },
 
-  async checkKey(provider: string, key: string) {
-    return await keyService.load().then(() => true);
-  },
+  async getRandomKey(provider: string) {
+    return await keyService.getRandomKey(provider);
+  }
 
 };
