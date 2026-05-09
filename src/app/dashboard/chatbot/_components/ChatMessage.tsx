@@ -1,81 +1,67 @@
+'use client';
+
+import React from 'react';
 import { BotMessage } from './BotMessage';
 import { UserMessageComponent } from './UserMessageComponent';
-import { Message } from '../_service/message'; // Import từ service mới
+import { Message } from '../_service/message';
+import { CapabilitiesList } from './CapabilitiesList';
+import { KnowledgeBaseList } from './KnowledgeBaseList';
+
 
 type Props = {
   message: Message;
 };
 
-export const ChatMessage = ({ message }: Props) => {
-  const { role, type, content, metadata } = message;
+export const ChatMessage = ({ 
+  message, 
+  onAction
+}: { 
+  message: Message, 
+  onAction?: (text: string) => void 
+}) => {
+  const { role, content } = message;
 
-  // 1. XỬ LÝ TIN NHẮN NGƯỜI DÙNG (USER)
-  if (role === 'user') {
-    switch (type) {
-      case 'markdown':
-        return <UserMessageComponent content={content} isMarkdown />;
-      
-      case 'error':
-        return <UserMessageComponent content={content} isError />;
+  switch (role) {
+    case 'user':
+      return <UserMessageComponent content={content} />;
 
-      // 'text' hoặc mặc định
-      default:
-        return <UserMessageComponent content={content} />;
-    }
+    case 'assistant':
+      if (content === '[SHOW_CAPABILITIES_CMPT]') {
+        return (
+          <div className="flex flex-col space-y-2">
+            <BotMessage content="Dưới đây là các chức năng tôi có thể hỗ trợ bạn:" />
+            <div className="ml-12 mr-4">
+               <CapabilitiesList onSelect={(text) => onAction?.(text)} /> {/* data upward */}
+            </div>
+          </div>
+        );
+      }
+
+      if (content === '[CALL_TOOL_BM25_SEARCH]') {
+        return (
+          <div className="flex flex-col space-y-2">
+            <BotMessage content="Hãy chọn kho tri thức mà bạn muốn tra cứu:" />
+            <div className="ml-12 mr-4">
+               <KnowledgeBaseList onSelect={(kbName) => onAction?.(`Tìm kiếm trong kho: ${kbName}`)} />
+            </div>
+          </div>
+        );
+      }
+
+      return <BotMessage content={content} />;
+
+    case 'system':
+      return (
+        <div className="my-4 flex items-center justify-center gap-4">
+          <div className="h-[1px] flex-1 bg-gray-100" />
+          <div className="text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            {content}
+          </div>
+          <div className="h-[1px] flex-1 bg-gray-100" />
+        </div>
+      );
+
+    default:
+      return null;
   }
-
-  // 2. XỬ LÝ TIN NHẮN AI (ASSISTANT)
-  if (role === 'assistant') {
-    switch (type) {
-      case 'loading':
-        return <BotMessage isLoading />;
-
-      case 'markdown':
-        return (
-          <BotMessage 
-            content={content} 
-            metadata={metadata} 
-            isMarkdown 
-          />
-        );
-
-      case 'error':
-        return (
-          <BotMessage 
-            content={content || 'Đã xảy ra lỗi hệ thống.'} 
-            isError 
-          />
-        );
-
-      case 'action':
-        return (
-          <BotMessage 
-            content={content} 
-            metadata={metadata} 
-            isAction 
-          />
-        );
-
-      // 'text' hoặc mặc định
-      default:
-        return (
-          <BotMessage 
-            content={content} 
-            metadata={metadata} 
-          />
-        );
-    }
-  }
-
-  // 3. XỬ LÝ TIN NHẮN HỆ THỐNG (SYSTEM) - Nếu cần hiển thị
-  if (role === 'system') {
-    return (
-      <div className="text-center text-[10px] text-gray-400 my-2 uppercase font-bold tracking-widest">
-        {content}
-      </div>
-    );
-  }
-
-  // FALLBACK
-  return null;
 };

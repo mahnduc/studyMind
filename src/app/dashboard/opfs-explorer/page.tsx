@@ -9,9 +9,10 @@ import {
   Edit2Icon,
 } from "lucide-react";
 import { opfsApi } from "../../lib/opfs/opfsApis";
-import { SimpleView } from "@/components/tiptap-templates/simple/SimpleView";
+
 import { useEditorStore } from "@/store/editorStore";
 import Link from "next/link";
+import { SimpleView } from "@/app/simple/components/tiptap-templates/simple/SimpleView";
 
 type NodeType = "file" | "folder";
 

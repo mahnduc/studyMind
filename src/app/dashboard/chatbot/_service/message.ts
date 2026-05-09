@@ -1,27 +1,36 @@
 // dashboard/chatbot/_service/message.ts
-export type MessageRole = 'user' | 'assistant' | 'system';
-export type MessageType = 'markdown' | 'action' | 'loading' | 'error';
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string; 
+  };
+}
 
-export interface Message {
+export type MessageRole = 'user' | 'assistant' | 'system';
+
+export interface BaseMessage {
   id: number;
   conversationId: number;
   role: MessageRole;
-  type: MessageType;
   content: string;
   createdAt: string;
-  metadata?: Record<string, any>; // tổng hợp
+  metadata?: Record<string, any>;
 }
-// hàm xử lý tạo chat
-export const createMessage = (
-  role: MessageRole,
-  content: string = '',
-  overrides: Partial<Omit<Message, 'role'>> = {} // cho phép ghi đè mọi thứ trừ role
-): Message => ({
-  id: Date.now() + Math.floor(Math.random() * 1000),
-  conversationId: 0,
-  role,
-  content,
-  type: 'markdown',
-  createdAt: new Date().toISOString(),
-  ...overrides,
-});
+
+export interface UserMessage extends BaseMessage {
+  role: 'user';
+}
+
+export interface AssistantMessage extends BaseMessage {
+  role: 'assistant';
+  model?: string;
+  tool_calls?: ToolCall[];
+}
+
+export interface SystemMessage extends BaseMessage {
+  role: 'system';
+}
+
+export type Message = UserMessage | AssistantMessage | SystemMessage;

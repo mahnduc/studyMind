@@ -3,8 +3,6 @@ import { User } from 'lucide-react';
 
 interface UserMessageProps {
   content: string;
-  isMarkdown?: boolean;
-  isError?: boolean;
 }
 
 export const UserMessageComponent = ({ content }: UserMessageProps) => {
