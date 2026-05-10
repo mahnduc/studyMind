@@ -58,10 +58,6 @@ export default function HomePage() {
             <div className="bg-[#2D3436] rounded-[20px] p-5 text-white relative border-b-4 border-black overflow-hidden flex flex-col items-center justify-center text-center">
               <Zap className="absolute -right-2 -top-2 w-16 h-16 text-[#00CEC9] opacity-10" />
               <span className="text-[#00CEC9] text-[10px] font-black uppercase tracking-[0.2em] mb-2">Tính năng</span>
-              {/* <div className="flex items-center gap-3">
-                <span className="text-5xl font-[900] italic leading-none">36</span>
-                <Flame size={28} className="text-[#FF3399] fill-[#FF3399]" />
-              </div> */}
               <p className="text-[11px] font-bold text-[#B2BEC3] mt-2 italic">Đang chờ phát triển</p>
             </div>
 

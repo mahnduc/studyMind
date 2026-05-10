@@ -1,4 +1,4 @@
-import { ProcessedChunk } from "../markdownChunker";
+import { ProcessedChunk } from "./markdownChunker";
 
 /**
  * Interface cho kết quả tìm kiếm

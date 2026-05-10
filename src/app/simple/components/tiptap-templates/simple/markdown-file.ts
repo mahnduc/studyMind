@@ -14,6 +14,7 @@ export const openMarkdownFromPicker = async (): Promise<OpenMarkdownResult | nul
           description: "Markdown",
           accept: {
             "text/markdown": [".md"],
+            "text/plain": [".md", ".txt"],
           },
         },
       ],
@@ -32,35 +33,3 @@ export const openMarkdownFromPicker = async (): Promise<OpenMarkdownResult | nul
     return null
   }
 }
-
-// export const downloadMarkdownFile = (
-//   markdown: string,
-//   filename?: string
-// ) => {
-//   try {
-//     const finalFileName =
-//       filename?.trim()
-//         ? filename.endsWith(".md")
-//           ? filename
-//           : `${filename}.md`
-//         : "document.md"
-
-//     const blob = new Blob([markdown], {
-//       type: "text/markdown;charset=utf-8",
-//     })
-
-//     const url = URL.createObjectURL(blob)
-
-//     const link = document.createElement("a")
-//     link.href = url
-//     link.download = finalFileName
-
-//     document.body.appendChild(link)
-//     link.click()
-//     document.body.removeChild(link)
-
-//     URL.revokeObjectURL(url)
-//   } catch (error) {
-//     console.error("Download markdown failed:", error)
-//   }
-// }

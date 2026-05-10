@@ -12,7 +12,7 @@ import {
   Loader2 
 } from "lucide-react";
 
-import { ingestFromPath } from "@/app/lib/brain/api";
+import { ingestFromPath } from "@/app/dashboard/chatbot/_lib/rag/api";
 
 export default function CreateCourse() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);

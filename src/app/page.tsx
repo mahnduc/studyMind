@@ -45,7 +45,7 @@ export default function LandingPage() {
         <div className="hidden md:flex gap-10 text-[13px] font-bold text-[#B2BEC3]">
           <a href="#" className="hover:text-[#FF3399] transition-colors uppercase tracking-widest">Tính năng</a>
           <a href="#" className="hover:text-[#FF3399] transition-colors uppercase tracking-widest">Mã nguồn</a>
-          <a href="#" className="hover:text-[#FF3399] transition-colors uppercase tracking-widest">Tài liệu</a>
+          <a href="/docs/index.html" className="hover:text-[#FF3399] transition-colors uppercase tracking-widest">Tài liệu</a>
         </div>
 
         <Link href="/dashboard">

@@ -73,7 +73,7 @@ export default function LeftSidebar({
 
       {/* SIDEBAR CONTAINER - Dùng absolute để không thoát ra ngoài Main */}
       <aside
-        className={`absolute top-0 left-0 h-full bg-white border-r-[1.5px] border-[#F0F0F0] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] w-72 z-20 rounded-l-[24px] overflow-hidden
+        className={`absolute top-0 left-0 h-full bg-white border-r-[1.5px] border-[#F0F0F0] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] w-72 z-20 overflow-hidden
         ${leftOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full p-6 pt-20">

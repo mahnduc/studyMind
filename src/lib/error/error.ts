@@ -31,11 +31,6 @@ export const throwError = (type: keyof typeof ERROR_DEFINITIONS, message?: strin
   throw new AppError(message, config.status, config.code);
 };
 
-// --- Cách sử dụng trong code ---
-// if (!user) {
-//   throwError('NOT_FOUND', 'Người dùng không tồn tại trong hệ thống');
-// }
-
 /**
  * Lưới bắt lỗi tập trung (Error Wrapper)
  * Chuyển đổi luồng từ Exception-based (throw) sang Result-based (return [err, data])
@@ -55,35 +50,3 @@ export async function catchError<T>(
     return [new AppError(message, 500, "ERR_INTERNAL"), null];
   }
 }
-// HDSD
-// SERVICE
-// async function getUserService(id: string) {
-//   const user = await db.find(id);
-//   if (!user) {
-//     throwError('NOT_FOUND', `Không tìm thấy user với ID: ${id}`);
-//   }
-//   return user;
-// }
-// BUSINESS
-// async function setupUserAccount(id: string) {
-//   // Bắt đầu lưới bảo vệ
-//   const [err, result] = await catchError(async () => {
-//     // Bước A: Lấy user
-//     const user = await getUserService(id);
-    
-//     // Bước B: Kiểm tra quyền (Nếu sai, throw tiếp)
-//     if (user.role !== 'admin') throwError('FORBIDDEN', 'Bạn không có quyền');
-
-//     // Bước C: Lưu log
-//     return await db.saveLog(id);
-//   });
-
-//   // Kiểm tra "Lưới" có bắt được gì không
-//   if (err) {
-//     console.error(`Xử lý thất bại [${err.code}]: ${err.message}`);
-//     return { success: false, msg: err.message };
-//   }
-
-//   // Nếu không có lỗi, result chắc chắn có dữ liệu
-//   return { success: true, data: result };
-// }

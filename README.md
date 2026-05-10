@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://mahnduc.github.io/uxie/"><strong>Dùng thử ngay</strong></a> •
-  <a href="https://uxie.pages.dev/docs/#/"><strong>Tài liệu chi tiết</strong></a> •
+  <a href="/docs/index.html/"><strong>Tài liệu chi tiết</strong></a> •
   <a href="#-tính-năng-nổi-bật"><strong>Tính năng</strong></a> •
   <a href="#-đóng-góp"><strong>Đóng góp</strong></a>
 </p>
