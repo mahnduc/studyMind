@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useTransition } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Send } from 'lucide-react';
+// Components
 import { ChatMessage } from './_components/ChatMessage';
-import { Message } from './_service/message';
-import { callGroqChat } from './_service/groq';
-import { keyApi } from '../settings/api-key/_api/key.api';
-import { getChatHistory, getDB, saveMessage } from './_service/db';
+// Hooks
+import { useMessages } from './_hooks/useMessages';
+import { useChatScroll } from './_hooks/useChatScroll';
+// Services & Utils
+import { createUiMessage } from './_service/message.factory';
+import { getDB } from './_service/db';
 import { catchError } from '@/lib/error/error';
-import { SYSTEM_PROMPT } from './prompt/system';
+import { sendChatMessage } from './_service/chat.service';
+import { loadConversation } from './_service/conversation.service';
 
 const LeftSidebar = dynamic(() => import('./_components/LeftSidebar'), {
   ssr: false,
@@ -17,208 +21,121 @@ const LeftSidebar = dynamic(() => import('./_components/LeftSidebar'), {
 });
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  // --- State & Hooks ---
+  const { messages, setMessages, appendMessage, clearMessages } = useMessages();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [chatId, setChatId] = useState<number | null>(null);
   const [sidebarRefresh, setSidebarRefresh] = useState(0);
-  const [, startTransition] = useTransition();
-  const scrollRef = useRef<HTMLDivElement>(null);
 
+  const scrollRef = useChatScroll([messages, isLoading]);
+
+  // --- Effects ---
   useEffect(() => {
     catchError(getDB());
   }, []);
 
-  // Tự động scroll xuống cuối mỗi khi có tin nhắn mới hoặc đang load
-  useEffect(() => {
-    if (scrollRef.current) {
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-      });
-    }
-  }, [messages, isLoading]);
+  const handleSend = useCallback(
+    async (overrideText?: string) => {
+      const text = overrideText ?? input.trim();
+      if (!text || isLoading) return;
+      // Hiển thị ngay tin nhắn người dùng
+      appendMessage(createUiMessage('user', text, chatId ?? 0));
+      // Reset input
+      if (!overrideText) setInput('');
 
-  const updateMessages = (msg: Message) => startTransition(() => setMessages(prev => [...prev, msg]));
+      setIsLoading(true);
 
-  /**
-   * handleSend chấp nhận một tham số text tùy chọn để có thể kích hoạt từ các nút bấm/thẻ Card (CapabilitiesList)
-   */
-  const handleSend = useCallback(async (overrideText?: string) => {
-    const text = overrideText || input.trim();
-    if (!text || isLoading) return;
+      // Gửi tin nhắn và nhận phản hồi
+      const [error, result] = await catchError(
+        sendChatMessage(text, chatId, messages)
+      );
 
-    // 1. Cập nhật tin nhắn User lên UI ngay lập tức
-    const userMsg: Message = {
-      id: Date.now(),
-      role: 'user',
-      content: text,
-      conversationId: chatId ?? 0,
-      createdAt: new Date().toISOString()
-    };
-
-    updateMessages(userMsg);
-    if (!overrideText) setInput('');
-    setIsLoading(true);
-
-    // 2. Chuẩn bị dữ liệu (Lưu tin nhắn và lấy API Key)
-    const [errPrep, prepData] = await catchError(Promise.all([
-      saveMessage(text, chatId, 'user'),
-      keyApi.getRandomKey('groq')
-    ]));
-
-    if (errPrep || !prepData) {
       setIsLoading(false);
-      const errMsg = `Lỗi: ${errPrep?.message || 'Không thể chuẩn bị dữ liệu'}`;
-      updateMessages({
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: errMsg,
-        conversationId: chatId ?? 0,
-        createdAt: new Date().toISOString()
-      });
-      return;
-    }
 
-    const [saveRes, apiKey] = prepData;
-    const activeId = saveRes.isNewConversation ? saveRes.conversationId : chatId;
-    
-    if (saveRes.isNewConversation) {
-      setChatId(saveRes.conversationId);
-      setSidebarRefresh(p => p + 1);
-    }
-
-    // 3. Xử lý ngữ cảnh (Sliding Window 8 tin nhắn gần nhất)
-    const limitedHistory = messages.slice(-8); 
-    const contextMessages = [SYSTEM_PROMPT, ...limitedHistory];
-
-    // 4. Gọi API Groq kèm theo toolList
-    // Đảm bảo hàm callGroqChat của bạn có nhận tham số toolList
-    const [errChat, res] = await catchError(callGroqChat(apiKey, contextMessages, text));
-
-    setIsLoading(false);
-
-    if (errChat || !res || !res.ok) {
-      updateMessages({
-        id: Date.now() + 2,
-        role: 'assistant',
-        content: `Lỗi phản hồi: ${errChat?.message || 'AI không thể trả lời lúc này'}`,
-        conversationId: activeId ?? 0,
-        createdAt: new Date().toISOString()
-      });
-      return;
-    }
-
-    const choice = res.data?.choices?.[0];
-    const aiMessage = choice?.message;
-    let finalContent = aiMessage?.content || '';
-
-    // 5. Logic Xử lý Tool Calling chuẩn hóa
-    if (aiMessage?.tool_calls && aiMessage.tool_calls.length > 0) {
-      const toolCall = aiMessage.tool_calls[0];
-      const functionName = toolCall.function.name;
-      const functionArgs = toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {};
-
-      // Map tên Function từ AI sang Tag UI của Frontend
-      switch (functionName) {
-        case 'get_capabilities':
-          finalContent = '[SHOW_CAPABILITIES_CMPT]';
-          break;
-        
-        case 'bm25_search':
-          // Lưu query vào nội dung hoặc một field ẩn nếu cần
-          // Ở đây ta dùng tag để ChatMessage render KnowledgeBaseList
-          finalContent = '[CALL_TOOL_BM25_SEARCH]';
-          break;
-
-        case 'show_chart':
-          finalContent = '[SHOW_CHART_CMPT]';
-          break;
-
-        default:
-          // Nếu AI gọi tool lạ, giữ nguyên nội dung hoặc fallback
-          break;
+      // Xử lý lỗi
+      if (error || !result) {
+        appendMessage(
+          createUiMessage(
+            'assistant',
+            `Lỗi: ${error?.message ?? 'AI không thể trả lời'}`,
+            chatId ?? 0
+          )
+        );
+        return;
       }
+      // Cập nhật trạng thái nếu là hội thoại mới
+      if (result.isNewConversation) {
+        setChatId(result.activeConversationId);
+        setSidebarRefresh((prev) => prev + 1);
+      }
+      // Hiển thị phản hồi của AI
+      appendMessage(result.assistantMessage);
+    },
+    [input, isLoading, chatId, messages, appendMessage]
+  );
+
+  const handleSelectConversation = useCallback(
+    async (id: number) => {
+      const [error, history] = await catchError(loadConversation(id));
+      if (error || !history) return;
+
+      setChatId(id);
+      setMessages(history);
+    },
+    [setMessages]
+  );
+
+  const handleCreateConversation = useCallback(() => {
+    setChatId(null);
+    clearMessages();
+  }, [clearMessages]);
+
+  const renderMessages = () => {
+    if (messages.length === 0) {
+      return (
+        <div className="text-center text-gray-400 mt-20">
+          <p className="text-xl font-bold">Bắt đầu một cuộc trò chuyện mới</p>
+          <p className="text-sm">Lịch sử được lưu tại trình duyệt của bạn.</p>
+        </div>
+      );
     }
 
-    // Fallback nếu AI không trả về cả nội dung lẫn tool call
-    if (!finalContent && !aiMessage?.tool_calls) {
-      finalContent = 'Tôi không tìm thấy thông tin phù hợp, bạn có muốn thử lại không?';
-    }
-
-    // 6. Tạo tin nhắn Assistant hoàn chỉnh
-    const assistantMsg: Message = {
-      id: Date.now() + 3,
-      role: 'assistant',
-      content: finalContent,
-      tool_calls: aiMessage?.tool_calls, // Quan trọng: Lưu lại để ChatMessage.tsx lấy tham số query
-      conversationId: activeId ?? 0,
-      createdAt: new Date().toISOString(),
-      model: res.data.model
-    };
-
-    // 7. Cập nhật UI và Lưu vào database
-    updateMessages(assistantMsg);
-    
-    // Lưu tin nhắn assistant vào DB (sử dụng requestIdleCallback để không chặn UI)
-    requestIdleCallback(() => {
-      catchError(saveMessage(finalContent, activeId, 'assistant'));
-    });
-
-  }, [input, isLoading, messages, chatId, updateMessages, setChatId, setSidebarRefresh]);
-
-  const handleSelectConversation = useCallback(async (id: number) => {
-    const [err, history] = await catchError(getChatHistory(id));
-    if (err || !history) return;
-
-    setChatId(id);
-    startTransition(() => {
-      setMessages(history.map(h => ({
-        id: h.id,
-        role: h.role as any,
-        content: h.content,
-        conversationId: h.conversation_id,
-        createdAt: h.created_at
-      })));
-    });
-  }, []);
+    return (
+      <>
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} onAction={handleSend}/>
+        ))}
+        {isLoading && (
+          <ChatMessage
+            message={{
+              id: -1,
+              role: 'assistant',
+              content: '...',
+              conversationId: chatId ?? 0,
+              createdAt: '',
+            }}
+          />
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full w-full relative overflow-hidden bg-white text-[#2D3436]">
       <LeftSidebar
         currentConversationId={chatId}
         onSelectConversation={handleSelectConversation}
-        onCreateConversation={() => { setChatId(null); setMessages([]); }}
+        onCreateConversation={handleCreateConversation}
         refreshTrigger={sidebarRefresh}
       />
 
-      <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth custom-scrollbar">
+      <main
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth custom-scrollbar"
+      >
         <div className="max-w-4xl mx-auto w-full pt-16">
-          {messages.length === 0 ? (
-            <div className="text-center text-gray-400 mt-20">
-              <p className="text-xl font-bold">Bắt đầu một cuộc trò chuyện mới</p>
-              <p className="text-sm">Lịch sử được lưu tại trình duyệt của bạn.</p>
-            </div>
-          ) : (
-            messages.map(m => (
-              <ChatMessage 
-                key={m.id} 
-                message={m} 
-                onAction={(text) => handleSend(text)} // Truyền hàm handleSend
-              />
-            ))
-          )}
-
-          {isLoading && (
-            <ChatMessage 
-              message={{
-                id: -1,
-                role: 'assistant',
-                content: '...',
-                conversationId: chatId ?? 0,
-                createdAt: ''
-              }} 
-            />
-          )}
+          {renderMessages()}
         </div>
       </main>
 
@@ -228,12 +145,18 @@ export default function ChatPage() {
             <textarea
               rows={1}
               value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
               placeholder="Nhập tin nhắn..."
               disabled={isLoading}
               className="focus:outline-none flex-1 bg-transparent border-none focus:ring-0 text-[15px] font-bold py-3 resize-none max-h-32 placeholder-[#B2BEC3] text-[#2D3436] pl-3"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
             />
+
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || isLoading}

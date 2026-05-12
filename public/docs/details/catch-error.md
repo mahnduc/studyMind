@@ -1,5 +1,5 @@
 # Chạy, ném và Bắt (Try - Catch - Throw)
-*Hệ thống quản lý lỗi tập trung (Centralized Error Handling System)* : *`app/lib/eror`*
+*Hệ thống quản lý lỗi tập trung (Centralized Error Handling System)* : *`app/lib/error`*
 
 ### 1. Tổng quan
 Hệ thống này giải quyết vấn đề "`callback hell`" của các khối `try-catch` lồng nhau. Thay vì viết `try-catch` ở khắp nơi, chúng ta tập trung định nghĩa lỗi tại một nơi duy nhất và sử dụng một "Lưới bắt lỗi" (`catchError`) để chuẩn hóa đầu ra dưới dạng `[error, data]`.

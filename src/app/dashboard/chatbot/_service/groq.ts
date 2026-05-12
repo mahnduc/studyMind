@@ -1,49 +1,104 @@
-import { toolList } from "../_utils/toolList";
+import {
+  GroqChatRequest,
+  GroqHttpBody,
+  GroqActionResult,
+  GroqChatCompletion,
+} from "../_types/groq.types";
 
-export const callGroqChat = async (
-  randomKey: string,
-  messages: any[],      // context
-  userContent: string   // chat cụ thể
-) => {
-  const response = await fetch(
-    'https://api.groq.com/openai/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${randomKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          ...messages.map(m => ({ role: m.role, content: m.content })),
-          { role: 'user', content: userContent },
-        ],
-        tools: toolList,
-        tool_choice: "auto",
-      }),
-    }
+//GroqChatCompletion: cấu trúc dữ liệu định nghĩa dữ liệu phản hồi của groq
+export const callGroqChat = async <T = GroqChatCompletion>(request: GroqChatRequest): Promise<GroqActionResult<T>> => {
+  const {
+    apiKey,
+    model,
+    messages,
+    tools,
+    tool_choice = "auto",
+    stream = false,
+    sampling,
+    response_format,
+    metadata,
+    timeoutMs = 30000,
+    signal,
+  } = request;
+
+  // Tạo body Groq API
+  const payload: GroqHttpBody = {
+    model,
+    messages,
+    tools,
+    tool_choice,
+    stream,
+    response_format,
+
+    // Flatten sampling config
+    temperature: sampling?.temperature,
+    top_p: sampling?.top_p,
+    max_tokens: sampling?.max_tokens,
+    frequency_penalty: sampling?.frequency_penalty,
+    presence_penalty: sampling?.presence_penalty,
+    stop: sampling?.stop,
+  };
+
+  // Loại bỏ các field undefined
+  const cleanPayload = Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== undefined)
   );
 
-  const data = await response.json();
+  // Thiết lập timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    timeoutMs
+  );
 
-  // debug
-  console.log("--- GROQ API RESPONSE RAW ---", data);
+  try {
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cleanPayload),
+        signal: signal ?? controller.signal,
+      }
+    );
 
-  if (data?.choices?.[0]?.message) {
-    const msg = data.choices[0].message;
-    
-    if (msg.tool_calls) {
-      console.log("AI đang gọi Tool:", msg.tool_calls);
-    } else {
-      console.log("AI trả lời Text:", msg.content);
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+
+    // Xử lý lỗi HTTP
+    if (!response.ok) {
+      return {
+        success: false,
+        error: {
+          message: data?.error?.message || "Unknown error",
+          code: data?.error?.code,
+          status: response.status,
+        },
+        metadata,
+      };
     }
-  } else if (data.error) {
-    console.error("Lỗi từ Groq API:", data.error);
-  }
 
-  return {
-    ok: response.ok,
-    data,
-  };
+    // Thành công
+    return {
+      success: true,
+      data: data as T,
+      metadata,
+    };
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+
+    // Lỗi mạng / timeout / abort
+    return {
+      success: false,
+      error: {
+        message: err?.message || "Network Error",
+        code: err?.name,
+      },
+      metadata,
+    };
+  }
 };

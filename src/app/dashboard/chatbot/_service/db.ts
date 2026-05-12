@@ -42,7 +42,7 @@ export const getDB = async (): Promise<PGlite> => {
 export const saveMessage = async (
   message: string,
   conversationId?: number | null,
-  role: "user" | "assistant" = "user" // Thêm tham số role
+  role: "user" | "assistant" = "user"
 ) => {
   const trimmedMessage = message?.trim();
   if (!trimmedMessage) throw new Error("Nội dung trống.");

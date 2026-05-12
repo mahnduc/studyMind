@@ -8,7 +8,6 @@
 - **Bắt đầu**
 - [Giới thiệu](README.md)
 - **Tài liệu kiến trúc phần mềm**
-- [Kiến trúc chung](./details/kien-truc-deepwhale.md)
 - [Chiến lược lưu trữ vật lý](./details/luu-tru-vat-ly.md)
 - [Tìm kiếm ngữ nghĩa](./details/semantic-search.md)
 - **Tài liệu thiết kế chi tiết**
