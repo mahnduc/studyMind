@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ShieldCheck
 } from "lucide-react";
+import { useAgentRuntime } from "@/context/AgentRuntimeContext";
 
 export default function ApiKeyTool() {
   const [provider, setProvider] = useState("groq");
@@ -21,6 +22,8 @@ export default function ApiKeyTool() {
   const [allKeys, setAllKeys] = useState<KeysSchema>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const { reloadFromStorage, refreshKey } = useAgentRuntime();
+  
   const fetchKeys = useCallback(async () => {
     const data = await keyApi.getAll();
     setAllKeys(data || {});
@@ -52,6 +55,7 @@ export default function ApiKeyTool() {
   const handleRemove = async (prov: string, key: string) => {
     if (confirm(`Bạn có chắc chắn muốn xóa key cho ${prov.toUpperCase()}?`)) {
       await keyApi.removeKey(prov, key);
+      await reloadFromStorage();
       await fetchKeys();
     }
   };

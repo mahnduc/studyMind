@@ -56,7 +56,7 @@ export default function CoursePage() {
             <Filter size={18} strokeWidth={2.5} />
           </button>
           
-          <Link href="/dashboard/courses/create">
+          <Link href="#">
             <button className="flex items-center gap-2 px-5 py-2 bg-[#FF3399] text-white text-[13px] font-[900] rounded-xl border-b-4 border-[#D12A7E] active:translate-y-0.5 active:border-b-0 transition-all">
               <Plus size={18} strokeWidth={4} />
               <span className="hidden sm:inline italic">TẠO MỚI</span>

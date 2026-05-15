@@ -13,7 +13,14 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  
-};
+  turbo: {
+    rules: {
+      "*.sql": {
+        loaders: ["raw-loader"],
+        as: "*.js",
+      },
+    },
+  },
+} as NextConfig;
 
 export default nextConfig;

@@ -12,7 +12,7 @@ import {
   Loader2 
 } from "lucide-react";
 
-import { ingestFromPath } from "@/app/dashboard/chatbot/_lib/rag/api";
+// import { ingestFromPath } from "@/app/dashboard/chatbot/_lib/rag/api";
 
 export default function CreateCourse() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -86,13 +86,12 @@ export default function CreateCourse() {
     try {
       const filePath = `my-workspace/${selectedFile}`;
       
-      const response = await ingestFromPath(filePath);
-
-      if (response.success) {
-        alert(response.message);
-      } else {
-        alert("Lỗi: " + response.error);
-      }
+    //   const response = await ingestFromPath(filePath);
+    //   if (response.success) {
+    //     alert(response.message);
+    //   } else {
+    //     alert("Lỗi: " + response.error);
+    //   }
       
     } catch (error: any) {
       alert("Lỗi: " + (error?.message || "Không thể xử lý dữ liệu."));

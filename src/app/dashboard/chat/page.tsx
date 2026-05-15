@@ -1,148 +1,140 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { Bot, User, SendHorizonal, Wrench } from "lucide-react";
-import { useAgent } from "@/core/features/chat/hooks/useAgent";
+import React, { useState } from "react";
+import { useAgentRuntime } from "@/context/AgentRuntimeContext";
 
-// --- Sub-components ---
+import { ChatPage } from "@/core/features/chat/ChatPage";
+import { DEFAULT_SESSION_ID } from "@/core/shared/constants";
 
-const EmptyState = () => (
-  <div className="h-full min-h-[500px] flex flex-col items-center justify-center text-center">
-    <div className="w-24 h-24 rounded-[30px] bg-[#FFF0F7] flex items-center justify-center mb-6">
-      <Bot size={44} className="text-[#FF3399]" strokeWidth={2.3} />
-    </div>
-    <h2 className="text-3xl font-black text-[#2D3436]">StudyMind AI</h2>
-    <p className="mt-4 max-w-md text-sm leading-7 text-[#636E72]">
-      Hỏi bài tập, lập trình, tài liệu học tập hoặc trò chuyện cùng AI.
-    </p>
-  </div>
-);
+import { keyApi } from "../settings/api-key/_api/key.api";
 
-const MessageBubble = ({ msg, isStreaming, isLast }: { msg: any; isStreaming: boolean; isLast: boolean }) => {
-  const isUser = msg.role === "user";
-  
-  return (
-    <div className={`flex items-end gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
-      {!isUser && (
-        <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#FF3399] flex items-center justify-center shadow-[0_4px_0_#D12A7E]">
-          <Bot size={18} className="text-white" strokeWidth={2.5} />
-        </div>
-      )}
+function MissingKeyView({
+  onKeySaved,
+}: {
+  onKeySaved: (newKey: string) => Promise<void> | void;
+}) {
+  const [apiKey, setApiKey] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-      <div className={`max-w-[90%] md:max-w-[75%] px-5 py-4 rounded-3xl text-[15px] leading-7 whitespace-pre-wrap break-words shadow-sm ${
-        isUser ? "bg-[#FF3399] text-white rounded-br-md" : "bg-white border border-[#F0F0F0] text-[#2D3436] rounded-bl-md"
-      }`}>
-        {msg.content}
-        {isLast && isStreaming && (
-          <span className="inline-flex ml-2">
-            <span className="w-2 h-2 rounded-full bg-[#FF3399] animate-pulse mt-1" />
-          </span>
-        )}
-      </div>
+  const handleSave = async () => {
+    const trimmedKey = apiKey.trim();
 
-      {isUser && (
-        <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#2D3436] flex items-center justify-center shadow-[0_4px_0_#1E272E]">
-          <User size={18} className="text-white" strokeWidth={2.5} />
-        </div>
-      )}
-    </div>
-  );
-};
+    if (!trimmedKey) {
+      setError("Vui lòng nhập API Key.");
+      return;
+    }
 
-const LoadingStatus = ({ state }: { state: string }) => (
-  <div className="flex items-end gap-3">
-    <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#FF3399] flex items-center justify-center shadow-[0_4px_0_#D12A7E]">
-      {state === "busy" ? <Wrench size={18} className="text-white" strokeWidth={2.5} /> : <Bot size={18} className="text-white" strokeWidth={2.5} />}
-    </div>
-    <div className="bg-white border border-[#F0F0F0] px-5 py-4 rounded-3xl rounded-bl-md shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="flex gap-1">
-          {[0, 150, 300].map((delay) => (
-            <div key={delay} className="w-2 h-2 rounded-full bg-[#B2BEC3] animate-bounce" style={{ animationDelay: `${delay}ms` }} />
-          ))}
-        </div>
-        <span className="text-xs font-bold text-[#636E72]">
-          {state === "thinking" ? "Đang suy nghĩ..." : "Đang thực thi công cụ..."}
-        </span>
-      </div>
-    </div>
-  </div>
-);
+    try {
+      setSaving(true);
+      setError(null);
 
-// --- Main Component ---
+      // 1. Lưu key xuống storage thông qua API:
+      // keyApi.addKey -> keyService.add(provider, key)
+      await keyApi.addKey("groq", trimmedKey);
 
-export default function ChatInterface() {
-  const { messages, agentState, isLoading, error, sendMessage } = useAgent();
-  const [input, setInput] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+      // 2. Thông báo cho AgentRuntime reload lại key và khởi tạo runtime
+      await onKeySaved(trimmedKey);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, agentState]);
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-    const value = input;
-    setInput("");
-    await sendMessage(value);
+      // 3. Xóa nội dung input sau khi lưu thành công
+      setApiKey("");
+    } catch (err) {
+      console.error("Save API key failed:", err);
+      setError("Không thể lưu API Key. Vui lòng kiểm tra lại.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const visibleMessages = messages.filter(
-    (msg) =>
-      msg.role !== "tool" &&
-      msg.role !== "system" &&
-      !(msg.role === "assistant" && !msg.content?.trim())
-  );
-
   return (
-    <div className="flex flex-col h-full bg-[#F7F9FB] overflow-hidden">
-      <main ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-6 scroll-smooth">
-        <div className="max-w-5xl mx-auto space-y-6">
-          {visibleMessages.length === 0 ? <EmptyState /> : (
-            visibleMessages.map((msg, idx) => (
-              <MessageBubble 
-                key={idx} 
-                msg={msg} 
-                isStreaming={agentState === "streaming"} 
-                isLast={idx === visibleMessages.length - 1} 
-              />
-            ))
-          )}
+    <div className="min-h-screen bg-[#F7F9FB] flex items-center justify-center p-6">
+      <div className="w-full max-w-xl bg-white border border-[#F0F0F0] rounded-3xl p-8 shadow-sm">
+        <div className="space-y-6">
+          <div className="text-center space-y-3">
+            <div className="text-6xl">🤖</div>
 
-          {(agentState === "thinking" || agentState === "busy") && <LoadingStatus state={agentState} />}
+            <h1 className="text-2xl font-bold text-[#2D3436]">
+              Chat chưa sẵn sàng
+            </h1>
 
-          {error && (
-            <div className="mx-auto max-w-md bg-red-50 border border-red-200 text-red-500 text-sm rounded-2xl px-5 py-4">
-              {error}
-            </div>
-          )}
-        </div>
-      </main>
+            <p className="text-sm text-[#636E72] leading-relaxed">
+              Vui lòng nhập{" "}
+              <span className="font-semibold">Groq API Key</span> để kích hoạt
+              trợ lý AI.
+            </p>
 
-      <footer className="shrink-0 border-t border-[#F0F0F0] bg-white px-4 md:px-6 py-5">
-        <div className="max-w-5xl mx-auto">
-          <form onSubmit={handleSend} className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isLoading ? "Vui lòng đợi phản hồi..." : "Nhập tin nhắn..."}
-                disabled={isLoading}
-                className="w-full bg-[#F7F9FB] border border-[#E5E5E5] rounded-3xl px-5 py-4 pr-14 text-[15px] text-[#2D3436] outline-none transition-all placeholder:text-[#B2BEC3] focus:border-[#FF3399] focus:ring-4 focus:ring-[#FF3399]/10 disabled:opacity-60"
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-2xl bg-[#FF3399] text-white flex items-center justify-center shadow-[0_4px_0_#D12A7E] active:shadow-none active:translate-y-[-40%] transition-all disabled:opacity-40 disabled:pointer-events-none"
+            <p className="text-sm text-[#B2BEC3]">
+              Lấy API Key tại{" "}
+              <a
+                href="https://console.groq.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#FF3399] font-semibold hover:underline"
               >
-                <SendHorizonal size={18} strokeWidth={2.8} />
+                console.groq.com
+              </a>
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => {
+                  setApiKey(e.target.value);
+                  if (error) setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !saving) {
+                    handleSave();
+                  }
+                }}
+                placeholder="gsk_..."
+                className="flex-1 px-4 py-3 bg-[#F7F9FB] border border-[#DDE3E8] rounded-xl outline-none focus:border-[#FF3399] font-mono text-sm"
+              />
+
+              <button
+                onClick={handleSave}
+                disabled={!apiKey.trim() || saving}
+                className="px-6 py-3 rounded-xl bg-[#FF3399] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Đang lưu..." : "Lưu API Key"}
               </button>
             </div>
-          </form>
+
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {error}
+              </div>
+            )}
+          </div>
         </div>
-      </footer>
+      </div>
     </div>
+  );
+}
+
+export default function ChatAppPage() {
+  const { runtime, error, refreshKey } = useAgentRuntime();
+
+  // Chỉ hiển thị form nhập API Key khi thực sự thiếu key
+  if (error === "MISSING_KEY" || !runtime) {
+    return (
+      <MissingKeyView
+        onKeySaved={async (newKey) => {
+          // refreshKey sẽ đọc lại key vừa lưu và khởi tạo runtime
+          await refreshKey(newKey);
+        }}
+      />
+    );
+  }
+
+  // Khi đã có runtime hợp lệ, toàn bộ UI do ChatPage đảm nhiệm
+  return (
+    <ChatPage
+      runtime={runtime}
+      sessionId={DEFAULT_SESSION_ID}
+    />
   );
 }
