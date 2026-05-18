@@ -1,16 +1,16 @@
-"use client";
+// "use client";
 
-import { ReactNode } from "react";
-import { AgentRuntimeProvider } from "./AgentRuntimeContext";
+// import { ReactNode } from "react";
+// import { AgentRuntimeProvider } from "./AgentRuntimeContext";
 
-interface ProvidersProps {
-  children: ReactNode;
-}
+// interface ProvidersProps {
+//   children: ReactNode;
+// }
 
-export default function Providers({ children }: ProvidersProps) {
-  return (
-    <AgentRuntimeProvider>
-      {children}
-    </AgentRuntimeProvider>
-  );
-}
+// export default function Providers({ children }: ProvidersProps) {
+//   return (
+//     <AgentRuntimeProvider>
+//       {children}
+//     </AgentRuntimeProvider>
+//   );
+// }

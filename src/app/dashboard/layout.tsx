@@ -7,7 +7,8 @@ import {
   GraduationCap, BookOpen, Settings,
   LayoutDashboard, BotMessageSquare,
   ChevronUp, ChevronDown,
-  User
+  User,
+  GitFork
 } from "lucide-react";
 import { Nunito } from 'next/font/google';
 import { UserContext } from "@/context/UserContext";
@@ -73,8 +74,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navItems = [
     { icon: LayoutDashboard, label: "Trang chủ", href: "/dashboard" },
-    { icon: BookOpen, label: "Học tập", href: "/dashboard/courses" },
-    { icon: BotMessageSquare, label: "Trò chuyện", href: "/dashboard/chat" },
+    { icon: BookOpen, label: "Luyện tập", href: "/dashboard/courses" },
+    { icon: BotMessageSquare, label: "Tra cứu", href: "/dashboard/chatbot" },
+    { icon: GitFork, label: "Mindmap", href: "/dashboard/courses/create/mindmap" },
   ];
 
   if (!mounted || !authorized) {

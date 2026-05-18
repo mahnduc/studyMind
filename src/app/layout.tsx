@@ -7,7 +7,6 @@ const robotoMono = Roboto_Mono({
 });
 
 import type { Metadata } from "next";
-import Providers from "@/context/providers";
 
 export const metadata: Metadata = {
   title: "Uxie Platform",
@@ -20,9 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" className={`${robotoMono.variable} dark`}>
       <body className="antialiased font-mono">
-        <Providers>
           {children}
-        </Providers>
       </body>
     </html>
   );

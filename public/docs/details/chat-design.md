@@ -1,4 +1,5 @@
-# Modular Orchestration Agent
+# Modular Agent Architecture
+`Runtime` `Supervisor` `Executors` `Capabilities`
 ## Tổng quan
 Agent triển khai local First, model llm sử dụng là api cảu groq: https://api.groq.com/openai/v1/chat/completions, thực hiên stream dữ liệu qua http post
 
@@ -188,3 +189,43 @@ Một file được coi là xương sống của mã nguồn đóng vai trò là
 - Tính thuần khiết: Các service xử lý dữ liệu ưu tiên các hàm thuần túy, Tránh gây ra các tác dụng phụ (side effects) khó kiểm soát khi Agent gọi nhiều Tool cùng lúc.
 - Minh bạch lỗi: trả lỗi chi tiết.
 - Không fix cứng các prompt vào file logic, tách chúng ra riêng các file cấu hình .prompt.ts
+
+## End-to-End Lifecycle
+```
+[UI: ChatPage] ──(User Message)──> [AgentRuntime]
+                                         │
+                                   (1) Phân tích Intent
+                                         ▼
+                                  [Supervisor] ──(Chọn Mode & Capability)
+                                         │
+                                   (2) Điều hướng Engine
+                                         ▼
+                                  [Executors] ──(Gọi LLM / Tools nếu cần)
+                                         │
+                                   (3) Xử lý kết quả & Cập nhật State
+                                         ▼
+[UI: Hiển thị] <──(Stream / Text)── [AgentRuntime]
+```
+
+### Supervisor - *Bộ nào điều hướng của toàn bộ agent*
+
+Supervisor hoàn toàn mù về mặt business logic, tất cả thông tin đều được nạp động từ `availableCapabilities` truyền vào.
+
+Khi thêm một capability mới (ví dụ: `export-pdf.capability.ts`), chỉ cần đăng ký nó ở `bootstrap.ts` Supervisor sẽ tự động nhận biết qua metadata
+
+Structured Output Enforcement via Prompting (Ép cấu hình đầu ra dạng cấu trúc bằng kỹ thuật Prompt)
+
+### UI Structure
+```
+features/chat/ChatPage
+            | MessageList
+            │     └── MessageBubble
+            │           ├── MarkdownRenderer
+            │           └── ToolRenderer
+            │                 └── WidgetRegistry
+            │                       └── ChatFileUploadWidget
+            │
+            ├── ChatInput
+            ├── ApprovalDialog
+            └── hooks/useAgent 
+ ```

@@ -11,7 +11,7 @@
 - [Chiến lược lưu trữ vật lý](./details/luu-tru-vat-ly.md)
 - [Tìm kiếm ngữ nghĩa](./details/semantic-search.md)
 - **Tài liệu thiết kế chi tiết**
-- [Chức năng trò chuyện](./details/chat-design.md)
+- [Agent](./details/chat-design.md)
 - [Xử lý bắt lỗi](./details/catch-error.md)
 - **Tham khảo**
 - [Xem thêm](./references/tham-khao.md)

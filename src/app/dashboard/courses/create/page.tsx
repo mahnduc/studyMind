@@ -11,6 +11,8 @@ import {
   BrainCircuit,
   Loader2 
 } from "lucide-react";
+import { ingestFromPath } from "./_lib/rag/api";
+import Link from "next/link";
 
 // import { ingestFromPath } from "@/app/dashboard/chatbot/_lib/rag/api";
 
@@ -86,12 +88,12 @@ export default function CreateCourse() {
     try {
       const filePath = `my-workspace/${selectedFile}`;
       
-    //   const response = await ingestFromPath(filePath);
-    //   if (response.success) {
-    //     alert(response.message);
-    //   } else {
-    //     alert("Lỗi: " + response.error);
-    //   }
+      const response = await ingestFromPath(filePath);
+      if (response.success) {
+        alert(response.message);
+      } else {
+        alert("Lỗi: " + response.error);
+      }
       
     } catch (error: any) {
       alert("Lỗi: " + (error?.message || "Không thể xử lý dữ liệu."));
@@ -135,9 +137,11 @@ export default function CreateCourse() {
                 </div>
                 <h3 className="text-xl font-[900] mb-2 uppercase tracking-tight">Tạo trắc nghiệm</h3>
                 <p className="text-[#777777] font-bold mb-8 text-xs flex-1">Tạo bộ câu hỏi đánh giá năng lực nhanh chóng.</p>
+                <Link href="/dashboard/courses/create/quiz" >
                 <button className="w-full py-3 bg-[#00CEC9] text-white border-b-6 border-[#00B5B1] rounded-xl font-[900] uppercase text-sm flex items-center justify-center gap-2 hover:brightness-105 active:translate-y-[4px] active:border-b-2 transition-all">
                   BẮT ĐẦU <ChevronRight size={16} strokeWidth={3} />
                 </button>
+                </Link>
               </div>
 
               {/* Card 3: Editor */}
@@ -147,9 +151,11 @@ export default function CreateCourse() {
                 </div>
                 <h3 className="text-xl font-[900] mb-2 uppercase tracking-tight">Viết nội dung</h3>
                 <p className="text-[#777777] font-bold mb-8 text-xs flex-1">Tự soạn thảo kiến thức trực tiếp trong trình duyệt.</p>
+                <Link href="/simple">
                 <button className="w-full py-3 bg-[#FF3399] text-white border-b-6 border-[#D12A7E] rounded-xl font-[900] uppercase text-sm flex items-center justify-center gap-2 hover:brightness-110 active:translate-y-[4px] active:border-b-2 transition-all">
                   MỞ EDITOR <ChevronRight size={16} strokeWidth={3} />
                 </button>
+                </Link>
               </div>
 
               {/* File List Section */}
