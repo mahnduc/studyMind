@@ -272,7 +272,6 @@ function MindmapContent() {
   return (
     <div className="relative h-screen w-screen bg-slate-50 overflow-hidden text-slate-900">
       
-      {/* CANVAS SƠ ĐỒ TƯ DUY TOÀN MÀN HÌNH */}
       <div className="w-full h-full">
         {nodes.length > 0 ? (
           <ReactFlow

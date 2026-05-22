@@ -8,7 +8,8 @@ import {
   LayoutDashboard, BotMessageSquare,
   ChevronUp, ChevronDown,
   User,
-  GitFork
+  GitFork,
+  Puzzle
 } from "lucide-react";
 import { Nunito } from 'next/font/google';
 import { UserContext } from "@/context/UserContext";
@@ -77,6 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: BookOpen, label: "Luyện tập", href: "/dashboard/courses" },
     { icon: BotMessageSquare, label: "Tra cứu", href: "/dashboard/chatbot" },
     { icon: GitFork, label: "Mindmap", href: "/dashboard/courses/create/mindmap" },
+    { icon: Puzzle, label: "Bộ sưu tập", href: "/dashboard/collections"}
   ];
 
   if (!mounted || !authorized) {

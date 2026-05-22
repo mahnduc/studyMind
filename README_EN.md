@@ -2,8 +2,6 @@
   <img src="public/banner.svg" alt="Uxie - Local-first AI Knowledge Management Platform" width="800">
 </p>
 
-<h1 align="center">Uxie (StudyMind-Agent)</h1>
-
 <p align="center">
   <strong>Next-gen Local-first Knowledge Management Platform with AI Agents, Optimized for the Browser</strong>
 </p>

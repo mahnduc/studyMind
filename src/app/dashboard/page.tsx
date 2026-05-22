@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Calendar as CalendarIcon, Zap, 
-  HardDrive, Bell, StickyNote, AlertCircle 
+  HardDrive, Bell, StickyNote, AlertCircle,
+  Flame, CheckCircle2, Circle
 } from "lucide-react";
 import Link from 'next/link';
 
@@ -23,6 +24,14 @@ interface RenderNoteItem {
   type: 'normal' | 'announcement' | 'special';
 }
 
+// Interface phục vụ tính năng theo dõi học tập tuần
+interface WeekDayProgress {
+  dayName: string;
+  dateKey: string;
+  isCompleted: boolean;
+  isToday: boolean;
+}
+
 export default function HomePage() {
   const now = new Date();
   const currentDay = now.getDate();
@@ -40,10 +49,78 @@ export default function HomePage() {
   const [systemAlerts, setSystemAlerts] = useState<RenderNoteItem[]>([]);
   const [hasNoteDates, setHasNoteDates] = useState<Set<string>>(new Set());
 
+  // States mới cho việc theo dõi tiến trình và Streak
+  const [streakCount, setStreakCount] = useState<number>(0);
+  const [weeklyProgress, setWeeklyProgress] = useState<WeekDayProgress[]>([]);
+
   // Hàm định dạng hiển thị ngày từ key yyyy-mm-dd sang dd/mm
   const formatKeyToDisplay = (dateStr: string) => {
     const parts = dateStr.split('-');
     return parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateStr;
+  };
+
+  // Hàm lấy danh sách các ngày trong tuần hiện tại (từ Thứ 2 đến Chủ Nhật)
+  const getWeeklyDates = (): WeekDayProgress[] => {
+    const currentWeekDays: WeekDayProgress[] = [];
+    const dayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    
+    // Đưa ngày hiện tại về chuẩn không chứa giờ để so sánh
+    const todayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`;
+    
+    // Lấy thứ hiện tại (0: Chủ nhật, 1: Thứ 2,..., 6: Thứ 7)
+    let currentDayOfWeek = now.getDay();
+    // Quy đổi hệ thống chủ nhật = 0 thành chủ nhật = 6 (để tính toán từ Thứ 2 hàng tuần)
+    let distanceToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+    
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - distanceToMonday);
+
+    for (let i = 0; i < 7; i++) {
+      const targetDate = new Date(monday);
+      targetDate.setDate(monday.getDate() + i);
+      
+      const yyyy = targetDate.getFullYear();
+      const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(targetDate.getDate()).padStart(2, '0');
+      const dateKey = `${yyyy}-${mm}-${dd}`;
+
+      currentWeekDays.push({
+        dayName: dayLabels[i],
+        dateKey,
+        isCompleted: false, // Sẽ được cập nhật sau khi đọc OPFS
+        isToday: dateKey === todayStr
+      });
+    }
+    return currentWeekDays;
+  };
+
+  const calculateStreak = (allActiveDates: Set<string>): number => {
+    let streak = 0;
+    const checkDate = new Date(currentYear, currentMonth, currentDay);
+    
+    // Chuỗi định dạng ngày yyyy-mm-dd
+    const formatDateStr = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    // Kiểm tra xem hôm nay có học không, nếu không thì kiểm tra bắt đầu từ hôm qua
+    let currentKey = formatDateStr(checkDate);
+    if (!allActiveDates.has(currentKey)) {
+      checkDate.setDate(checkDate.getDate() - 1);
+      currentKey = formatDateStr(checkDate);
+    }
+
+    // Vòng lặp đếm lùi về quá khứ để check chuỗi liên tục
+    while (allActiveDates.has(currentKey)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+      currentKey = formatDateStr(checkDate);
+    }
+
+    return streak;
   };
 
   // ==========================================
@@ -106,6 +183,18 @@ export default function HomePage() {
       setNormalNotes(loadedNormal);
       setSystemAlerts([...specialNotes, ...announcementNotes]); // Ghép mảng: Đặc biệt nằm trên
       setHasNoteDates(datesTracked);
+
+      // 1. Đồng bộ và tính toán hệ thống Streak học tập
+      const currentStreak = calculateStreak(datesTracked);
+      setStreakCount(currentStreak);
+
+      // 2. Đồng bộ trạng thái học tập của các ngày trong tuần hiện tại
+      const baseWeekStructure = getWeeklyDates();
+      const updatedWeekStructure = baseWeekStructure.map(day => ({
+        ...day,
+        isCompleted: datesTracked.has(day.dateKey)
+      }));
+      setWeeklyProgress(updatedWeekStructure);
 
     } catch (error) {
       console.error("Lỗi khi tải cấu trúc file dữ liệu từ OPFS:", error);
@@ -172,7 +261,7 @@ export default function HomePage() {
                     <span className={`w-1 h-1 rounded-full flex-shrink-0 ${isToday ? 'bg-white' : 'bg-[#FF3399]'}`} />
                   ) : (
                     /* Thêm một khoảng trống ẩn bằng kích thước dấu chấm khi không có data để số không bị nhảy lệch vị trí giữa các ô */
-                    <span className="w-1 h-1 opaque-0 block" />
+                    <span className="w-1 h-1 opacity-0 block" />
                   )}
                 </div>
               );
@@ -184,11 +273,20 @@ export default function HomePage() {
         <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             
-            {/* Streak */}
+            {/* Hộp đếm Chuỗi ngày học tập (Streak) */}
             <div className="bg-[#2D3436] rounded-[20px] p-5 text-white relative border-b-4 border-black overflow-hidden flex flex-col items-center justify-center text-center">
               <Zap className="absolute -right-2 -top-2 w-16 h-16 text-[#00CEC9] opacity-10" />
-              <span className="text-[#00CEC9] text-[10px] font-black uppercase tracking-[0.2em] mb-2">Tính năng</span>
-              <p className="text-[11px] font-bold text-[#B2BEC3] mt-2 italic">Đang chờ phát triển</p>
+              <span className="text-[#00CEC9] text-[10px] font-black uppercase tracking-[0.2em] mb-2">Chuỗi học tập</span>
+              
+              <div className="flex items-center justify-center gap-2 mt-1">
+                <Flame className={`w-10 h-10 ${streakCount > 0 ? 'text-[#FF3399] animate-bounce' : 'text-gray-500'}`} fill="currentColor" />
+                <span className="text-[42px] font-[900] text-white leading-none tracking-tight">{streakCount}</span>
+              </div>
+              
+              <p className="text-[12px] font-bold text-white uppercase tracking-wider mt-1">Ngày liên tiếp</p>
+              <p className="text-[10px] font-medium text-[#B2BEC3] mt-2 italic">
+                {streakCount > 0 ? 'Hãy giữ vững phong độ nhé!' : 'Hãy bắt đầu bài học hôm nay!'}
+              </p>
             </div>
 
             {/* HỘP THÔNG BÁO DỮ LIỆU (Đặc biệt nằm trên, Thông báo nằm dưới) */}
@@ -247,6 +345,41 @@ export default function HomePage() {
               </div>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* SECTION BỔ SUNG: THEO DÕI QUÁ TRÌNH HỌC TẬP THEO TUẦN */}
+      <div className="bg-[#E6FFFA] rounded-[24px] border border-[#B2F5EA] p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <CheckCircle2 size={18} className="text-[#00A3C4]" />
+          <h3 className="text-[14px] font-black text-[#006D77] uppercase tracking-wide">Tiến trình học tập theo tuần</h3>
+        </div>
+        
+        <div className="grid grid-cols-7 gap-2 md:gap-4">
+          {weeklyProgress.map((day, idx) => (
+            <div 
+              key={idx} 
+              className={`p-3 rounded-xl flex flex-col items-center justify-center gap-2 transition-all border
+                ${day.isToday 
+                  ? 'bg-[#00CEC9]/20 border-[#00CEC9] shadow-sm ring-2 ring-[#00CEC9]/10' 
+                  : 'bg-white/80 border-[#E2E8F0]'
+                }`}
+            >
+              <span className={`text-[11px] font-black tracking-wider ${day.isToday ? 'text-[#008B8B]' : 'text-gray-400'}`}>
+                {day.dayName}
+              </span>
+              
+              {day.isCompleted ? (
+                <CheckCircle2 size={22} className="text-[#00CEC9]" fill="#E6FFFA" />
+              ) : (
+                <Circle size={22} className="text-gray-300" />
+              )}
+              
+              <span className="text-[9px] font-bold text-gray-400 font-mono">
+                {day.dateKey.split('-')[2]}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 

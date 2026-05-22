@@ -11,7 +11,7 @@ export default function JourneyIntro() {
   const [isSaving, setIsSaving] = useState(false); 
   const router = useRouter();
 
-  // Xử lý phím Enter toàn cục
+  // Xử lý phím Enter toàn cục (vẫn giữ cho người dùng máy tính)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
@@ -147,7 +147,7 @@ export default function JourneyIntro() {
                 Chúng tôi có thể gọi bạn là gì?
               </motion.h2>
               
-              <motion.div variants={itemVariants} className="w-full relative group">
+              <motion.div variants={itemVariants} className="w-full relative group mb-12">
                 <input
                   autoFocus
                   type="text"
@@ -156,16 +156,39 @@ export default function JourneyIntro() {
                   placeholder="Nhập tên..."
                   className="w-full bg-white border-[4px] border-[#00CEC9]/20 focus:border-[#FF3399] rounded-[32px] px-10 py-8 text-[28px] font-[800] text-[#00CEC9] outline-none shadow-2xl transition-all placeholder:text-[#B2BEC3]/40 text-center"
                 />
-                <AnimatePresence>
+                
+                {/* Hướng dẫn trên Desktop */}
+                <div className="hidden md:block">
+                  <AnimatePresence>
+                    {name.trim() && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-[#FF3399] font-[800] text-[14px] uppercase tracking-widest whitespace-nowrap"
+                      >
+                        Nhấn Enter để tiếp tục
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+
+              {/* Nút bấm dành riêng cho Mobile (và hiển thị tốt trên mọi thiết bị) */}
+              <motion.div variants={itemVariants} className="w-full px-2">
+                <AnimatePresence mode="wait">
                   {name.trim() && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-[#FF3399] font-[800] text-[14px] uppercase tracking-widest whitespace-nowrap"
+                    <motion.button
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setStep(2)}
+                      className="w-full py-6 bg-[#FF3399] text-white rounded-[28px] font-[900] text-[22px] border-b-[8px] border-[#D12A7E] active:border-b-0 active:translate-y-[6px] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-[#FF3399]/30 uppercase tracking-wider"
                     >
-                      Nhấn Enter để tiếp tục
-                    </motion.div>
+                      Tiếp tục <ArrowRight size={26} strokeWidth={3} />
+                    </motion.button>
                   )}
                 </AnimatePresence>
               </motion.div>

@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const isGithubActions = process.env.GITHUB_ACTIONS || false;
-const repoName = 'uxie';
+const repoName = 'studymind-local-first';
 
 const nextConfig: NextConfig = {
   /* config options here */
