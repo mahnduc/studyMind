@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { opfsApi } from "../../lib/opfs/opfsApis";
 
-import { useEditorStore } from "@/store/editorStore";
+import { useEditorStore } from "@/stores/editorStore";
 import Link from "next/link";
 import { SimpleView } from "@/app/simple/components/tiptap-templates/simple/SimpleView";
 

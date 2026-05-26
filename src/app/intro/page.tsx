@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { ArrowRight, Cloud, Rocket } from "lucide-react";
 import { useRouter } from "next/navigation"; 
+import { cloudVariants, itemVariants, pageVariants } from "./animation-variants";
+import { useProfileStore } from "@/stores/profileStore";
 
 export default function JourneyIntro() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [isSaving, setIsSaving] = useState(false); 
   const router = useRouter();
+  const updateProfile = useProfileStore((state) => state.updateProfile);
 
-  // Xử lý phím Enter toàn cục (vẫn giữ cho người dùng máy tính)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
@@ -26,27 +28,12 @@ export default function JourneyIntro() {
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, [step, name, isSaving]);
 
-  // Hàm xử lý lưu OPFS và chuyển trang
   const handleFinishJourney = async () => {
     if (isSaving || !name.trim()) return;
     setIsSaving(true);
 
     try {
-      // 1. TRUY CẬP HỆ THỐNG FILE OPFS
-      const root = await navigator.storage.getDirectory();
-      const profileDir = await root.getDirectoryHandle("system-profile", { create: true });
-      const fileHandle = await profileDir.getFileHandle("info.json", { create: true });
-
-      // 2. GHI DỮ LIỆU
-      const writable = await fileHandle.createWritable();
-      const userData = {
-        username: name,
-        updatedAt: new Date().toISOString(),
-      };
-
-      await writable.write(JSON.stringify(userData, null, 2));
-      await writable.close();
-
+      const success = await updateProfile(name);
       router.replace("/dashboard");
 
     } catch (error) {
@@ -55,45 +42,6 @@ export default function JourneyIntro() {
       setIsSaving(false);
     }
   };
-
-  const pageVariants: Variants = {
-    initial: { opacity: 0, x: 20, scale: 0.98 },
-    animate: { 
-      opacity: 1, 
-      x: 0, 
-      scale: 1,
-      transition: {
-        duration: 0.4,
-        ease: [0.23, 1, 0.32, 1], 
-        when: "beforeChildren",
-        staggerChildren: 0.1 
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      x: -20, 
-      scale: 0.98,
-      transition: { duration: 0.3 }
-    },
-  };
-
-  const itemVariants: Variants = {
-    initial: { opacity: 0, y: 15 },
-    animate: { opacity: 1, y: 0 },
-  };
-
-  const cloudVariants = (duration: number, delay: number, range: number): Variants => ({
-    floating: {
-      x: [0, range, 0],
-      y: [0, -10, 0],
-      transition: {
-        duration,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay,
-      },
-    },
-  });
 
   return (
     <main className="min-h-screen w-full bg-[#F7F9FB] font-['Nunito'] flex items-center justify-center p-4 relative overflow-hidden">

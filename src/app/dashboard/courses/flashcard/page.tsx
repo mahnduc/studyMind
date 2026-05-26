@@ -1,131 +1,216 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import Flashcard from './_components/Flashcard';
+import { useEffect, useState } from "react";
+import FlashCardViewer from "./_components/FlashCardViewer";
+import { Sidebar } from "lucide-react";
 
-interface FlashcardType {
-  id: number;
-  word: string;
-  phonetic: string;
+// Định nghĩa cấu trúc dữ liệu theo file JSON của bạn
+interface PartOfSpeech {
   partOfSpeech: string;
-  meaningEn: string;
-  meaningVi: string;
-  exampleEn: string;
-  exampleVi: string;
-  synonyms: string[];
-  antonyms: string[];
-  collocations: string[];
-  category: string;
-  difficulty: string;
+  definitionEn: string;
+  definitionVi: string;
 }
 
-export default function FlashcardPage() {
-  const [cards, setCards] = useState<FlashcardType[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [loading, setLoading] = useState(true);
-  
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
-  const isHolding = useRef(false);
+interface FlashCardItem {
+  word: string;
+  phonetics: string[];
+  partsOfSpeech: PartOfSpeech[];
+}
 
+export default function FlashCard() {
+  const [collections, setCollections] = useState<string[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<string>("");
+  const [cards, setCards] = useState<FlashCardItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isFlipped, setIsFlipped] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+
+  // Quét danh sách các bộ sưu tập trong /system-collections/
   useEffect(() => {
-    async function loadData() {
+    async function loadCollections() {
       try {
-        const res = await fetch('/flashcards/animal.json');
-        const data = await res.json();
-        setCards(data.flashcards || []);
-      } catch (error) {
-        console.error('Error loading flashcards:', error);
-      } finally {
-        setLoading(false);
+        setIsLoading(true);
+        const root = await navigator.storage.getDirectory();
+        const dirHandle = await root.getDirectoryHandle("system-collections", {
+          create: true,
+        });
+
+        const fileNames: string[] = [];
+        // @ts-ignore - Duyệt qua tất cả các file trong thư mục OPFS
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === "file" && entry.name.endsWith(".json")) {
+            fileNames.push(entry.name.replace(".json", ""));
+          }
+        }
+
+        setCollections(fileNames);
+        if (fileNames.length > 0) {
+          setSelectedCollection(fileNames[0]);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error("Lỗi OPFS:", err);
+        setError("Không thể quét thư mục bộ sưu tập.");
+        setIsLoading(false);
       }
     }
-    loadData();
+
+    loadCollections();
   }, []);
 
-  const currentCard = useMemo(() => cards[currentIndex], [cards, currentIndex]);
-
-  const speak = useCallback((text: string) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.85;
-    window.speechSynthesis.speak(utterance);
-  }, []);
-
-  const nextCard = useCallback(() => {
-    if (currentIndex < cards.length - 1) {
-      setFlipped(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => prev + 1);
-      }, 150);
-    }
-  }, [currentIndex, cards.length]);
-
-  const prevCard = useCallback(() => {
-    if (currentIndex > 0) {
-      setFlipped(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => prev - 1);
-      }, 150);
-    }
-  }, [currentIndex]);
-
-  // Xử lý sự kiện nhấn giữ (Hold) để lật thẻ
-  const handlePressStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    isHolding.current = false;
-    pressTimer.current = setTimeout(() => {
-      isHolding.current = true;
-      setFlipped((prev) => !prev);
-    }, 300);
-  }, []);
-
-  const handlePressEnd = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-    }
-    if (!isHolding.current && e.type !== 'mouseleave') {
-      setFlipped((prev) => !prev);
-    }
-  }, []);
-
-  // Lắng nghe phím mũi tên và dấu cách trên bàn phím
+  // 2. Đọc nội dung file JSON được chọn từ OPFS
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft') {
-        prevCard();
-      } else if (event.key === 'ArrowRight') {
-        nextCard();
-      } else if (event.key === ' ' || event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-        event.preventDefault(); // Ngăn cuộn trang ngoài ý muốn
-        setFlipped((prev) => !prev);
+    if (!selectedCollection) return;
+
+    async function loadCardData() {
+      try {
+        setIsLoading(true);
+        const root = await navigator.storage.getDirectory();
+        const dirHandle = await root.getDirectoryHandle("system-collections");
+        const fileHandle = await dirHandle.getFileHandle(`${selectedCollection}.json`);
+        
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        const data: FlashCardItem[] = JSON.parse(text);
+
+        setCards(data);
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setError(null);
+      } catch (err) {
+        console.error("Lỗi đọc file JSON:", err);
+        setError(`Lỗi đọc bộ sưu tập: ${selectedCollection}`);
+        setCards([]);
+      } finally {
+        setIsLoading(false);
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nextCard, prevCard]);
+    loadCardData();
+  }, [selectedCollection]);
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-[#f7f9f8] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-[#FF3399]/20 border-t-[#FF3399] animate-spin" />
-      </div>
-    );
-  }
+  // Điều hướng chuyển thẻ
+  const nextCard = () => {
+    if (cards.length === 0) return;
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % cards.length);
+    }, 155);
+  };
 
-  if (!currentCard) {
-    return (
-      <div className="fixed inset-0 bg-[#f7f9f8] flex items-center justify-center p-4">
-        <p className="text-gray-500 font-medium">Không tìm thấy thẻ ghi nhớ nào.</p>
-      </div>
-    );
-  }
+  const prevCard = () => {
+    if (cards.length === 0) return;
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
+    }, 155);
+  };
+
+  const currentCard = cards[currentIndex];
 
   return (
-    <div className="fixed inset-0 bg-[#f7f9f8] text-[#2d3436] font-sans antialiased flex items-center justify-center p-4 select-none overflow-hidden">
-      
+    <div className="flex relative overflow-hidden flex-1 h-full w-full bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+
+      <div className={`h-full bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-in-out relative flex-shrink-0 ${
+          isCollapsed ? "w-0 opacity-0 pointer-events-none" : "w-64 opacity-100"
+        }`}
+      >
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800 tracking-wide">Bộ Sưu Tập</h2>
+          </div>
+          
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            title="Thu gọn thanh menu"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Danh sách các bộ sưu tập */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+          {collections.length === 0 ? (
+            <div className="text-sm text-slate-400 text-center py-8 font-medium">
+              Chưa có bộ sưu tập nào.
+            </div>
+          ) : (
+            collections.map((name) => {
+              const isSelected = selectedCollection === name;
+              return (
+                <button
+                  key={name}
+                  onClick={() => setSelectedCollection(name)}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${
+                    isSelected
+                      ? "bg-[#00CEC9] text-white shadow-md shadow-[#FF3399]/20"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 truncate">
+                    
+                    <span className="truncate">{name}</span>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {isCollapsed && (
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="absolute left-4 top-4 z-50 p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 shadow-sm hover:shadow-md transition-all duration-200"
+          title="Mở rộng thanh menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+      <div className="flex flex-col items-center justify-start w-full h-full p-6 overflow-y-auto bg-slate-50/50">       
+
+        {/* THÔNG BÁO LỖI NẾU CÓ */}
+        {error && (
+          <div className="w-full max-w-md text-red-500 bg-red-50 px-4 py-2.5 rounded-xl border border-red-200 mb-4 text-center text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* NỘI DUNG CHÍNH CỦA TRANG HỌC */}
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-semibold animate-pulse">
+            Đang đồng bộ dữ liệu từ hệ thống lưu trữ...
+          </div>
+        ) : cards.length > 0 && currentCard ? (
+          <FlashCardViewer
+            cards={cards}
+            currentIndex={currentIndex}
+            isFlipped={isFlipped}
+            setIsFlipped={setIsFlipped}
+            nextCard={nextCard}
+            prevCard={prevCard}
+          />
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2 mt-12">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-slate-300">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+            <p className="font-bold text-sm text-slate-500">Chưa có dữ liệu học tập</p>
+            <p className="text-[11px] max-w-xs text-center text-slate-400 leading-normal">
+              Vui lòng tạo thư mục <code className="bg-slate-200 text-red-500 px-1 py-0.5 rounded">system-collections</code> trong OPFS và thêm tệp tin định dạng cấu trúc <code className="bg-slate-200 text-red-500 px-1 py-0.5 rounded">*.json</code> để bắt đầu.
+            </p>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

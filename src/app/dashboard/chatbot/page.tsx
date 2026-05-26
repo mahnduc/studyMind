@@ -7,7 +7,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Search, Send, Brain, Compass, Sparkles, BookOpen, Database, Flame, Zap } from "lucide-react";
 
-// ─── Markdown Renderer Component ────────────────────────────────────────────
 function MarkdownContent({ content }: { content: string }) {
   return (
     <div className="prose prose-sm max-w-none font-sans" style={{ fontFamily: "'Nunito', sans-serif" }}>

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { getAllKnowledgeBases, initializeSearchFromStorage, getVectorIndexFromStorage } from "../_lib/rag/api";
+import { getAllKnowledgeBases, initializeSearchFromStorage, getVectorIndexFromStorage } from "../../../../lib/rag/api";
 import { 
   generateQueryEmbedding, 
   cosineSimilarity, 
   fuseResults, 
   readJsonFromOPFS,
   StoredChunk 
-} from "../_lib/rag/search-logic";
+} from "../../../../lib/rag/search-logic";
 import { keyApi } from "../../settings/api-key/_api/key.api";
 
 export interface HybridResultItem {

@@ -86,7 +86,7 @@ export async function generateMCQBankFromOPFS(
   const validChunks = chunksArray
     .map(item => item.chunk || item)
     .filter(chunk => chunk && chunk.content && chunk.content.length > 100)
-    .sort(() => 0.5 - Math.random()); // Trộn ngẫu nhiên tăng tính khách quan cho đề thi
+    .sort(() => 0.5 - Math.random());
 
   if (validChunks.length === 0) {
     throw new Error("Không có đoạn dữ liệu nào đủ điều kiện để tiến hành sinh câu hỏi.");

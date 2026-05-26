@@ -7,9 +7,6 @@
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
 
-// /**
-//  * ✅ ROOT stable (không phụ thuộc script location)
-//  */
 // const ROOT = process.cwd();
 
 // /**
@@ -24,9 +21,6 @@
 //   "definitions"
 // );
 
-// /**
-//  * Generated folder
-//  */
 // const GENERATED = path.join(
 //   ROOT,
 //   "src",
@@ -36,14 +30,8 @@
 //   "generated"
 // );
 
-// /**
-//  * Output file
-//  */
 // const OUTPUT = path.join(GENERATED, "tools.manifest.ts");
 
-// /**
-//  * Ensure output dir exists
-//  */
 // fs.mkdirSync(GENERATED, { recursive: true });
 
 // const imports = [];

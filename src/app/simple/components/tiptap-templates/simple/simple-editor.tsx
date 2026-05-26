@@ -78,7 +78,7 @@ import { Markdown } from "@tiptap/markdown"
 import { openMarkdownFromPicker } from "./markdown-file"
 import { FileDown, FileSearchCorner, FileUp, MenuSquare, Save, Text, Type } from "lucide-react"
 import SaveFileModal from "./popupSave"
-import { useEditorStore } from "@/store/editorStore"
+import { useEditorStore } from "@/stores/editorStore"
 
 const MainToolbarContent = ({
   onHighlighterClick,

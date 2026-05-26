@@ -2,10 +2,12 @@
 
 import React from "react";
 import { User, Pencil } from "lucide-react";
-import { useUser } from "@/context/UserContext";
+import { useProfileStore } from "@/stores/profileStore";
 
 export default function UserIdentification() {
-  const { userName } = useUser();
+  const profile = useProfileStore((state) => state.profile);
+  const loadProfile = useProfileStore((state) => state.loadProfile);
+
   return (
     <section className="bg-white border-[1.5px] border-[#F0F0F0] rounded-[24px] p-8 mb-8 shadow-[0_2px_0_0_rgba(0,0,0,0.08)] relative overflow-hidden">
       <div className="flex flex-col items-center justify-center gap-6">
@@ -30,7 +32,7 @@ export default function UserIdentification() {
         {/* Thông tin User */}
         <div className="text-center space-y-2">
           <h2 className="text-[24px] font-[800] text-[#2D3436] leading-tight">
-            {userName}
+            {profile?.username}
           </h2>
           <div className="inline-block bg-[#F0F0F5] px-3 py-1 rounded-full">
             <span className="text-[12px] font-[600] text-[#2D3436] uppercase tracking-wide">

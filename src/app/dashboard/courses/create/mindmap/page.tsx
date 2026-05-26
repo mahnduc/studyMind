@@ -16,10 +16,10 @@ import {
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
 
-import { getAllKnowledgeBases } from "../_lib/rag/api";
-import { ProcessedChunk } from "../_lib/rag/markdownChunker";
 import ControlPanel from "./_components/ControlPanel";
 import DetailWindow from "./_components/DetailWindow";
+import { ProcessedChunk } from "@/lib/rag/markdownChunker";
+import { getAllKnowledgeBases } from "@/lib/rag/api";
 
 interface TreeNode {
   id: string;

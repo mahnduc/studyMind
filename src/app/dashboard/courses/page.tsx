@@ -241,8 +241,8 @@ export default function CoursePage() {
             <div className="flex flex-col gap-4 animate-in slide-in-from-bottom-3 duration-500 delay-75">
               <div className="flex items-center gap-2 px-1">
                 <UserPen size={18} className="text-[#FF3399]" />
-                <h2 className="text-base font-[900] text-[#2D3436] uppercase tracking-wide">Bộ đề trắc nghiệm AI cá nhân</h2>
-                <span className="text-[10px] bg-[#FF3399]/10 text-[#FF3399] font-black px-2 py-0.5 rounded-full">LOCAL-FIRST</span>
+                <h2 className="text-base font-[900] text-[#2D3436] uppercase tracking-wide">Bộ đề trắc nghiệm cá nhân</h2>
+                <span className="text-[10px] bg-[#FF3399]/10 text-[#FF3399] font-black px-2 py-0.5 rounded-full">Personal</span>
               </div>
 
               {filteredQuizzes.length === 0 ? (
@@ -250,8 +250,7 @@ export default function CoursePage() {
                   <div className="w-10 h-10 bg-[#F7F9FB] rounded-xl flex items-center justify-center text-[#B2BEC3] mb-3 border border-[#E5E5E5]">
                     <HelpCircle size={18} />
                   </div>
-                  <h4 className="text-xs font-black text-[#2D3436] uppercase tracking-wider">Kho đề trống hoặc không tìm thấy</h4>
-                  <p className="text-[11px] text-[#B2BEC3] font-medium mt-1">Hãy thử đổi từ khóa hoặc bấm nút để sinh cấu trúc đề tự động.</p>
+                  <h4 className="text-xs font-black text-[#2D3436] uppercase tracking-wider">Kho đề trống </h4>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">

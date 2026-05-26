@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getAllKnowledgeBases } from "../_lib/rag/api";
-import { generateMCQBankFromOPFS, MCQQuestion } from "@/app/dashboard/chatbot/_lib/rag/qa-generator";
+import { generateMCQBankFromOPFS, MCQQuestion } from "@/lib/rag/qa-generator";
 import { Settings, FileText, CheckCircle2 } from "lucide-react";
+import { getAllKnowledgeBases } from "@/lib/rag/api";
 
 // Sửa đổi hàm helper: Đảm bảo chỉ truy cập đúng thư mục tri thức nguồn và tạo duy nhất 1 file trắc nghiệm tại đó
 async function writeSingleJsonToOPFS(knowledgeBaseName: string, fileName: string, data: any): Promise<void> {

@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   output: 'export', 
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
   basePath: isGithubActions ? `/${repoName}` : undefined,
   assetPrefix: isGithubActions ? `/${repoName}/` : undefined,
   trailingSlash: true,

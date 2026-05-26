@@ -1,6 +1,6 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"; 
 import { Document } from "@langchain/core/documents";
-import { opfsApi } from "../../../../lib/opfs/opfsApis";
+import { opfsApi } from "../../app/lib/opfs/opfsApis";
 
 /**
  * Interface cho metadata của mỗi chunk

@@ -2,6 +2,7 @@
 
 import { MarkdownChunker, ProcessedChunk } from "./markdownChunker";
 import { BM25Search } from "./BM25Search";
+import { convertDocxToMdInOPFS } from "./docx2md";
 
 /**
  * Interface cho dữ liệu Vector được lưu trữ
@@ -176,9 +177,26 @@ export async function getVectorIndexFromStorage(folderName: string): Promise<Vec
 /**
  * API chính để đẩy dữ liệu vào hệ thống RAG
  */
+
 export async function ingestFromPath(filePath: string): Promise<OPFSResponse> {
   try {
-    await runTask(filePath);
+    const lowerPath = filePath.toLowerCase();
+    let targetFilePath = filePath;
+
+    // 1. Kiểm tra định dạng và xử lý nếu là file .docx
+    if (lowerPath.endsWith('.docx')) {
+      targetFilePath = await convertDocxToMdInOPFS(filePath);
+    } else if (!lowerPath.endsWith('.md')) {
+      // Nếu không phải .md cũng không phải .docx thì báo lỗi
+      return {
+        success: false,
+        error: `Định dạng tệp tin không hợp lệ. Hệ thống hỗ trợ xử lý tài liệu định dạng Markdown (.md) và Word (.docx).`
+      };
+    }
+
+    // 2. Chạy tác vụ xử lý Hybrid Search với file .md (gốc hoặc sau khi chuyển đổi)
+    await runTask(targetFilePath);
+    
     return {
       success: true,
       message: `Tài liệu đã được xử lý Hybrid Search (Keyword + Semantic) và lưu trữ thành công.`
