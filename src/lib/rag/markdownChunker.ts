@@ -150,7 +150,6 @@ class MarkdownChunker {
       return "code";
     }
 
-    // Check table (có header separator |---|---|)
     if (
       trimmed.includes("|") &&
       /\|[\s-]+\|/.test(trimmed) &&

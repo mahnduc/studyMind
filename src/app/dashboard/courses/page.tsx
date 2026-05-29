@@ -24,13 +24,6 @@ const OFFICIAL_COURSES_MOCK: OfficialCourseData[] = [
     category: 'Vocabulary',
     thumbnailColor: 'from-[#00CEC9] to-[#00A8A3]'
   },
-  {
-    id: 'flashcard',
-    title: 'Ghi nhớ từ vựng',
-    description: 'Hệ thống ghi nhớ thông qua thẻ từ vựng.',
-    category: 'Vocabulary',
-    thumbnailColor: 'from-[#B2BEC3] to-[#2D3436]'
-  },
 ];
 
 export default function CoursePage() {

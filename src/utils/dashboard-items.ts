@@ -2,6 +2,7 @@ import { BookOpen, BotMessageSquare, Calendar, GitFork, LayoutDashboard, LucideC
 
 export const navItems = [
     { icon: LayoutDashboard, label: "Trang chủ", href: "/dashboard" },
+    { icon: BotMessageSquare, label: "Agent", href:"/dashboard/assistant"},
     { icon: LucideCompass, label: "Khám phá", href: "/dashboard/discover" },
     { icon: Puzzle, label: "Bộ sưu tập", href: "/dashboard/collections"},
     { icon: Calendar, label: "Thời gian biểu", href: "/dashboard/goal/timetable"}

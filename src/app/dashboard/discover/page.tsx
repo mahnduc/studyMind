@@ -83,7 +83,7 @@ export default function DiscoverPage() {
           </p>
         </div>
 
-        <Link href="/dashboard/chatbot" className="block mt-6">
+        <Link href="/dashboard/lookup" className="block mt-6">
             <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-2 rounded-xl hover:border-[#00cec9] transition-colors cursor-pointer">
                 <Search size={16} className="text-[#f7f9f8]/40 ml-2 shrink-0" />
                 <span className="text-sm text-white/30 flex-1 select-none py-0.5">

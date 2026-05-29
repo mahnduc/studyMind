@@ -12,6 +12,7 @@ export default function DashboardUtil() {
                 </button>
             </Link>
 
+            <Link href="/dashboard/notification">
             <button className="w-full min-h-14 bg-white border-2 border-[#2D3436]/5 rounded-2xl flex items-center justify-center gap-3 border-b-4 border-[#E5E5E5] hover:bg-[#F7F9F8] active:translate-y-0.5 active:border-b-0 cursor-pointer transition-all group px-4 py-3">
                 <BellRing size={18} className="text-[#FF3399] transition-transform group-hover:scale-110 shrink-0" />
                 <div className="text-left min-w-0">
@@ -19,6 +20,7 @@ export default function DashboardUtil() {
                 <p className="text-[13px] font-black text-[#2D3436] mt-0.5 truncate">Thông báo</p>
                 </div>
             </button>
+            </Link>
 
             <Link href="/dashboard/opfs-explorer" className="flex w-full">
                 <div className="w-full min-h-14 bg-white border-2 border-[#2D3436]/5 rounded-2xl flex items-center justify-center gap-3 border-b-4 border-[#E5E5E5] hover:bg-[#F7F9F8] active:translate-y-0.5 active:border-b-0 cursor-pointer transition-all group px-4 py-3">

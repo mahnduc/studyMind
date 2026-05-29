@@ -5,10 +5,8 @@ import { generateMCQBankFromOPFS, MCQQuestion } from "@/lib/rag/qa-generator";
 import { Settings, FileText, CheckCircle2 } from "lucide-react";
 import { getAllKnowledgeBases } from "@/lib/rag/api";
 
-// Sửa đổi hàm helper: Đảm bảo chỉ truy cập đúng thư mục tri thức nguồn và tạo duy nhất 1 file trắc nghiệm tại đó
 async function writeSingleJsonToOPFS(knowledgeBaseName: string, fileName: string, data: any): Promise<void> {
   const root = await navigator.storage.getDirectory();
-  // Lấy chính xác handle của thư mục tri thức hiện tại (không tạo thêm các tầng thư mục lặp)
   const dirHandle = await root.getDirectoryHandle(knowledgeBaseName, { create: false });
   const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
   const writable = await fileHandle.createWritable();
@@ -71,7 +69,6 @@ export default function QuizGeneratorPage() {
       setMcqList(questions);
       setStatusText(`Đã tạo thành công ${questions.length} câu hỏi.`);
 
-      // Gom toàn bộ thông tin tri thức vào 1 Object duy nhất
       const quizData = {
         knowledgeBase: selectedKB,
         createdAt: new Date().toISOString(),
@@ -79,10 +76,8 @@ export default function QuizGeneratorPage() {
         questions: questions
       };
 
-      // Đặt tên file cố định để ghi đè (Overwrite) nếu tạo lại, tránh tạo ra file rác
       const fileName = `${selectedKB}_quiz.json`;
-      
-      // Gọi hàm ghi tệp duy nhất vào đúng thư mục tri thức
+
       await writeSingleJsonToOPFS(selectedKB, fileName, quizData);
       
       setSavedPath(`/${selectedKB}/${fileName}`);
@@ -112,10 +107,8 @@ export default function QuizGeneratorPage() {
       </div>
     </div>
 
-    {/* Body: chiếm toàn bộ phần còn lại */}
     <div className="flex flex-1 overflow-hidden min-h-0">
 
-      {/* PANEL TRÁI: điều khiển — chiều rộng cố định, không cuộn ngoài */}
       <aside className="w-64 flex-none flex flex-col border-r border-[#F0F0F0] bg-[#F7F9FB]/40 overflow-y-auto">
         <div className="flex-1 px-5 py-5 space-y-5">
           <h3 className="text-[10px] font-black text-[#FF3399] uppercase tracking-wider flex items-center gap-1.5">

@@ -32,7 +32,6 @@ async function saveQuizToOPFSDirectory(
 ): Promise<string> {
   try {
     const root = await navigator.storage.getDirectory();
-    // Khởi tạo hoặc truy cập thẳng vào thư mục chuyên biệt 'quiz' ở gốc OPFS
     const quizDirHandle = await root.getDirectoryHandle(folderName, { create: true });
     const fileHandle = await quizDirHandle.getFileHandle(fileName, { create: true });
     
@@ -48,7 +47,6 @@ async function saveQuizToOPFSDirectory(
 }
 
 /**
- * Hàm sinh bộ câu hỏi trắc nghiệm từ dữ liệu OPFS và tự động lưu trữ vào thư mục quiz
  * @param folderName Tên bộ tri thức/thư mục chứa chunks gốc trong OPFS
  * @param requestedQuestions Số lượng câu hỏi người dùng muốn sinh (Giới hạn từ 1 - 20)
  * @returns Trả về mảng câu hỏi trắc nghiệm đã sinh và lưu trữ thành công
@@ -57,16 +55,13 @@ export async function generateMCQBankFromOPFS(
   folderName: string,
   requestedQuestions: number = 10
 ): Promise<MCQQuestion[]> {
-  // Giới hạn số lượng câu hỏi đầu vào trong khoảng hợp lệ [1, 20]
-  const targetCount = Math.min(Math.max(requestedQuestions, 1), 20);
+  const targetCount = Math.min(Math.max(requestedQuestions, 1), 20); // giới hạn số lượng câu hỏi
 
-  // 1. Lấy API Key Groq từ hệ thống quản lý key
   const apiKey = await keyApi.getRandomKey("groq"); 
   if (!apiKey) {
     throw new Error("Không thể khởi tạo tiến trình: Không tìm thấy Groq API Key hợp lệ.");
   }
 
-  // 2. Đọc và tiền xử lý dữ liệu chunks từ OPFS
   let allChunksData = await readJsonFromOPFS<any>(folderName, "chunks.json");
   if (!allChunksData) throw new Error("Không thể đọc tệp chunks.json hoặc tệp trống.");
 
@@ -82,7 +77,6 @@ export async function generateMCQBankFromOPFS(
     throw new Error("Không tìm thấy dữ liệu chunk hợp lệ trong tệp chunks.json");
   }
 
-  // Lọc và làm sạch danh sách chunk, chọn lọc các đoạn có độ dài text tối thiểu
   const validChunks = chunksArray
     .map(item => item.chunk || item)
     .filter(chunk => chunk && chunk.content && chunk.content.length > 100)
@@ -95,7 +89,6 @@ export async function generateMCQBankFromOPFS(
   const mcqBank: MCQQuestion[] = [];
   let chunkIndex = 0;
 
-  // 3. Vòng lặp lấy dữ liệu và gọi API
   while (mcqBank.length < targetCount && chunkIndex < validChunks.length) {
     const remainingToGenerate = targetCount - mcqBank.length;
     const questionsToAskFromThisChunk = remainingToGenerate >= 2 ? 2 : 1;
@@ -179,7 +172,6 @@ ${chunk.content}`;
     }
   }
 
-  // 4. Tự động đóng gói và lưu trữ vào thư mục 'quiz' trong OPFS
   if (mcqBank.length > 0) {
     const quizPayload: SavedQuizData = {
       knowledgeBase: folderName,
@@ -188,10 +180,8 @@ ${chunk.content}`;
       questions: mcqBank
     };
 
-    // Quy hoạch tên tệp lưu trữ theo định dạng: [tên_kho_tri_thức]_quiz.json
     const fileName = `${folderName}_quiz.json`;
     
-    // Thực thi lưu vào thư mục 'quiz' tập trung thay vì lưu trùng trong thư mục tri thức
     const savedPath = await saveQuizToOPFSDirectory("quiz", fileName, quizPayload);
     console.log(`[OPFS Storage] Đã đồng bộ bộ đề trắc nghiệm thành công tại: ${savedPath}`);
   } else {
@@ -199,4 +189,38 @@ ${chunk.content}`;
   }
 
   return mcqBank;
+}
+
+/**
+ * Hàm xử lý lấy ra bộ câu hỏi trắc nghiệm đã được lưu trong OPFS
+ * @param folderName Tên bộ tri thức / tên thư mục gốc của quiz
+ * @returns Trả về dữ liệu toàn bộ cấu trúc Quiz đã lưu hoặc null nếu không tìm thấy
+ */
+export async function getSavedQuizFromOPFS(
+  folderName: string
+): Promise<SavedQuizData | null> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    const quizDirHandle = await root.getDirectoryHandle("quiz");
+    const fileName = `${folderName}_quiz.json`;
+    
+    const fileHandle = await quizDirHandle.getFileHandle(fileName);
+    
+    const file = await fileHandle.getFile();
+    const fileContent = await file.text();
+    
+    if (!fileContent) return null;
+    
+    const quizData: SavedQuizData = JSON.parse(fileContent);
+    return quizData;
+    
+  } catch (error: any) {
+    if (error.name === "NotFoundError") {
+      console.warn(`[OPFS Storage] Không tìm thấy bộ đề trắc nghiệm nào cho: ${folderName}`);
+      return null;
+    }
+    
+    console.error("Lỗi trong quá trình lấy dữ liệu Quiz từ OPFS:", error);
+    throw new Error("Không thể truy xuất bộ đề trắc nghiệm từ hệ thống lưu trữ cục bộ.");
+  }
 }

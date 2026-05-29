@@ -5,7 +5,7 @@ import { useHybridSearch } from "./_hooks/useHybridSearch";
 import KnowledgeSidebar from "./_components/KnowledgeSidebar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Search, Send, Brain, Compass, Sparkles, BookOpen, Database, Flame, Zap } from "lucide-react";
+import { Send, FileSearchCorner } from "lucide-react";
 
 function MarkdownContent({ content }: { content: string }) {
   return (
@@ -107,7 +107,6 @@ function MarkdownContent({ content }: { content: string }) {
   );
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
 export default function HybridSearchPage() {
   const {
     knowledgeBases,
@@ -121,8 +120,6 @@ export default function HybridSearchPage() {
     setApiKey,
     showKey,
     setShowKey,
-    // selectedModel,
-    // setSelectedModel,
     results,
     llmResponse,
     handleSearch,
@@ -141,8 +138,6 @@ export default function HybridSearchPage() {
         selectedKB={selectedKB}
         setSelectedKB={setSelectedKB}
         loading={loading}
-        // selectedModel={selectedModel}
-        // setSelectedModel={setSelectedModel}
         apiKey={apiKey}
         setApiKey={setApiKey}
         showKey={showKey}
@@ -151,29 +146,6 @@ export default function HybridSearchPage() {
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full bg-[#F7F9FB] relative min-w-0">
-
-        {/* SUB-HEADER (TOP NAV) */}
-        <div className="h-16 bg-white flex items-center justify-between px-6 shrink-0 z-10 gap-3 shadow-[0_2px_0_0_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-2 text-[13px] font-bold text-[#B2BEC3] truncate">
-            <BookOpen size={16} className="text-[#B2BEC3]" />
-            <span>Nguồn tri thức hiện tại:</span>
-            <span className={`px-3 py-1 rounded-full text-[12px] font-extrabold tracking-wide ${
-              selectedKB 
-                ? "bg-[#FFF0F7] text-[#FF3399]" 
-                : "bg-[#F7F9FB] text-[#B2BEC3] italic"
-            } truncate max-w-xs`}>
-              {selectedKB || "Chưa thiết lập cấu hình"}
-            </span>
-          </div>
-
-          {statusText && (
-            <div className="text-[12px] font-bold text-[#00CEC9] bg-[#F0FFFE] px-3 py-1.5 rounded-full flex items-center gap-2 max-w-xs truncate shrink-0 shadow-[0_2px_0_0_rgba(0,0,0,0.04)]">
-              <span className="w-2 h-2 rounded-full bg-[#00CEC9] animate-pulse shrink-0" />
-              <span className="truncate">{statusText}</span>
-            </div>
-          )}
-        </div>
-
         {/* RESULTS AREA */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
 
@@ -258,7 +230,6 @@ export default function HybridSearchPage() {
           )}
         </div>
 
-        {/* FOOTER */}
         <footer className="px-4 py-6 bg-white shrink-0 z-10">
           <div className="max-w-3xl mx-auto">
             <form onSubmit={handleSearch} className="w-full flex items-center gap-3">
@@ -267,13 +238,13 @@ export default function HybridSearchPage() {
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 title="Cấu hình cơ sở tri thức"
                 disabled={loading}
-                className={`shrink-0 w-12 h-12 rounded-2xl transition-all duration-150 flex items-center justify-center border shadow-sm ${
+                className={`shrink-0 w-12 h-12 rounded-2xl transition-all duration-150 flex items-center justify-center ${
                   isSidebarOpen 
                     ? "bg-[#FFF0F7] text-[#FF3399] border-[#FF3399]/30" 
                     : "bg-[#F7F9FB] text-[#B2BEC3] border-[#E8ECF0] hover:bg-[#E8ECF0] hover:text-[#2D3436]"
                 }`}
               >
-                <Database size={18} strokeWidth={2} />
+                <FileSearchCorner size={20} />
               </button>
               <div 
                 className={`flex-1 flex items-center bg-[#F7F9FB] rounded-2xl border border-[#E8ECF0] transition-all duration-200 ${
@@ -288,8 +259,8 @@ export default function HybridSearchPage() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={
                     selectedKB
-                      ? "Hỏi bất cứ điều gì liên quan đến tài liệu học tập..."
-                      : "Vui lòng click icon Database ở bên trái để thiết lập nguồn dữ liệu..."
+                      ? "Hỏi bất cứ điều gì liên quan đến tài liệu được cung cấp  ..."
+                      : "Tra cứu..."
                   }
                   disabled={loading || !selectedKB}
                   className="w-full bg-transparent font-sans text-[15px] font-medium text-[#2D3436] placeholder:text-[#B2BEC3] px-5 py-4 outline-none disabled:cursor-not-allowed"

@@ -2,7 +2,6 @@
 
 import { MarkdownChunker, ProcessedChunk } from "./markdownChunker";
 import { BM25Search } from "./BM25Search";
-import { convertDocxToMdInOPFS } from "./docx2md";
 
 /**
  * Interface cho dữ liệu Vector được lưu trữ
@@ -76,7 +75,35 @@ export async function getAllKnowledgeBases(): Promise<string[]> {
     return [];
   }
 }
+/**
+ * Hàm bổ trợ kiểm tra tài liệu đã được ingest thành công trước đó hay chưa
+ */
+async function checkIfIngested(filePath: string): Promise<boolean> {
+  try {
+    const fileName = filePath.split('/').pop() || 'unknown.md';
+    const folderName = fileName; 
 
+    const root = await navigator.storage.getDirectory();
+    
+    // 1. Cố gắng lấy thư mục 'knowledge' (không tự động tạo mới nếu chưa có)
+    const knowledgeHandle = await root.getDirectoryHandle('knowledge', { create: false });
+    
+    // 2. Cố gắng lấy thư mục kết quả của file (không tự động tạo mới)
+    const folderHandle = await knowledgeHandle.getDirectoryHandle(folderName, { create: false });
+
+    // 3. Kiểm tra tính toàn vẹn: Đảm bảo cả file chunks và file index đều đã tồn tại
+    // Nếu các hàm getFileHandle này không ném ra lỗi, chứng tỏ quá trình ingest trước đó đã hoàn tất thành công
+    await folderHandle.getFileHandle(`chunks.json`, { create: false });
+    await folderHandle.getFileHandle(`vector_index.json`, { create: false });
+    await folderHandle.getFileHandle(`bm25_index.json`, { create: false });
+    
+    return true;
+  } catch (error) {
+    // Bất kỳ lỗi nào xảy ra ở block trên (NotFoundError) đồng nghĩa với việc 
+    // tài liệu chưa từng được xử lý hoặc xử lý chưa hoàn tất.
+    return false;
+  }
+}
 /**
  * Core Task: Xử lý Markdown -> Chunking -> BM25 -> Embedding -> Lưu trữ OPFS
  */
@@ -85,7 +112,7 @@ async function runTask(filePath: string): Promise<string> {
 
   try {
     const fileName = filePath.split('/').pop() || 'unknown.md';
-    const folderName = fileName; 
+    const folderName = fileName.replace(/\.[^/.]+$/, "");
     const saveFileName = `chunks.json`;
     const indexFileName = `bm25_index.json`;
     const vectorFileName = `vector_index.json`;
@@ -177,31 +204,35 @@ export async function getVectorIndexFromStorage(folderName: string): Promise<Vec
 /**
  * API chính để đẩy dữ liệu vào hệ thống RAG
  */
-
 export async function ingestFromPath(filePath: string): Promise<OPFSResponse> {
   try {
     const lowerPath = filePath.toLowerCase();
-    let targetFilePath = filePath;
 
-    // 1. Kiểm tra định dạng và xử lý nếu là file .docx
-    if (lowerPath.endsWith('.docx')) {
-      targetFilePath = await convertDocxToMdInOPFS(filePath);
-    } else if (!lowerPath.endsWith('.md')) {
-      // Nếu không phải .md cũng không phải .docx thì báo lỗi
+    if (!lowerPath.endsWith('.md')) {
       return {
         success: false,
-        error: `Định dạng tệp tin không hợp lệ. Hệ thống hỗ trợ xử lý tài liệu định dạng Markdown (.md) và Word (.docx).`
+        error: `Định dạng tệp tin không hợp lệ. Hệ thống hiện tại chỉ hỗ trợ xử lý tài liệu định dạng Markdown (.md).`
       };
     }
 
-    // 2. Chạy tác vụ xử lý Hybrid Search với file .md (gốc hoặc sau khi chuyển đổi)
-    await runTask(targetFilePath);
+    const isAlreadyIngested = await checkIfIngested(filePath);
+    if (isAlreadyIngested) {
+      return {
+        success: true,
+        message: `Tài liệu này đã được xử lý Hybrid Search trước đó. Hệ thống tự động bỏ qua thao tác trùng lặp.`
+      };
+    }
+
+    await runTask(filePath);
     
     return {
       success: true,
       message: `Tài liệu đã được xử lý Hybrid Search (Keyword + Semantic) và lưu trữ thành công.`
     };
   } catch (error: any) {
-    return { success: false, error: error?.message || "Lỗi xử lý dữ liệu." };
+    return { 
+      success: false, 
+      error: error?.message || "Lỗi xử lý dữ liệu." 
+    };
   }
 }

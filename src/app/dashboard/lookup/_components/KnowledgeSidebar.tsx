@@ -10,8 +10,6 @@ interface KnowledgeSidebarProps {
   selectedKB: string | null;
   setSelectedKB: (kb: string) => void;
   loading: boolean;
-//   selectedModel: string;
-//   setSelectedModel: (model: string) => void;
   apiKey: string;
   setApiKey: (key: string) => void;
   showKey: boolean;
@@ -28,7 +26,6 @@ export default function KnowledgeSidebar({
 }: KnowledgeSidebarProps) {
   return (
     <>
-      {/* Backdrop mờ khi mở trên Mobile / Tablet */}
       {isOpen && (
         <div
           className="absolute inset-0 bg-black/20 backdrop-blur-[2px] z-30 lg:hidden"
@@ -50,7 +47,6 @@ export default function KnowledgeSidebar({
               <h2 className="text-[11px] font-black text-[#2D3436] tracking-wider uppercase leading-none">
                 Cơ sở tri thức
               </h2>
-              <p className="text-[9px] text-[#B2BEC3] font-semibold mt-0.5">OPFS Storage</p>
             </div>
           </div>
           <button
@@ -94,8 +90,6 @@ export default function KnowledgeSidebar({
             })
           )}
         </div>
-
-        
       </aside>
     </>
   );

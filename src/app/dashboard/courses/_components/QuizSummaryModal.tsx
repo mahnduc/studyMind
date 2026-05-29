@@ -15,14 +15,12 @@ export default function QuizSummaryModal({ quiz, onClose, onStartQuiz }: QuizSum
   const [history, setHistory] = useState<QuizHistoryAttempt[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
-  // Đọc lịch sử làm bài của riêng file này từ OPFS
   useEffect(() => {
     async function loadQuizHistory() {
       try {
         setLoadingHistory(true);
         const root = await navigator.storage.getDirectory();
         
-        // Tạo hoặc lấy thư mục history_quiz
         const historyDir = await root.getDirectoryHandle('history_quiz', { create: true });
         const historyFileName = `${quiz.fileName.replace('.json', '')}_history.json`;
         
@@ -31,10 +29,8 @@ export default function QuizSummaryModal({ quiz, onClose, onStartQuiz }: QuizSum
           const file = await fileHandle.getFile();
           const text = await file.text();
           const data: QuizHistoryFile = JSON.parse(text);
-          // Sắp xếp lịch sử mới nhất lên đầu
           setHistory(data.attempts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
         } catch {
-          // File lịch sử chưa tồn tại (chưa làm lần nào)
           setHistory([]);
         }
       } catch (err) {
@@ -46,7 +42,6 @@ export default function QuizSummaryModal({ quiz, onClose, onStartQuiz }: QuizSum
     loadQuizHistory();
   }, [quiz]);
 
-  // Định dạng hiển thị thời gian làm bài (Ví dụ: 1m 24s)
   const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${seconds} giây`;
     const mins = Math.floor(seconds / 60);
@@ -61,7 +56,6 @@ export default function QuizSummaryModal({ quiz, onClose, onStartQuiz }: QuizSum
     });
   };
 
-  // Tính toán thông số trung bình
   const totalAttempts = history.length;
   const avgAccuracy = totalAttempts > 0 
     ? Math.round(history.reduce((sum, item) => sum + item.accuracy, 0) / totalAttempts) 

@@ -25,7 +25,6 @@ export function useHybridSearch() {
   // Quản lý API Key và cấu hình Mô hình Groq
   const [apiKey, setApiKey] = useState<string>("");
   const [showKey, setShowKey] = useState<boolean>(false);
-  // const [selectedModel, setSelectedModel] = useState<string>("llama-3.1-8b-instant");
 
   const [results, setResults] = useState<HybridResultItem[]>([]);
   const [llmResponse, setLlmResponse] = useState<string>("");
@@ -206,8 +205,6 @@ export function useHybridSearch() {
     setApiKey,
     showKey,
     setShowKey,
-    // selectedModel,
-    // setSelectedModel,
     results,
     llmResponse,
     handleSearch

@@ -38,7 +38,6 @@ export async function fetchDictionaryInsightFromGroq(
   word: string,
   apiKey: string
 ): Promise<GroqAiResponse> {
-  console.log(`[Groq Fetch] Đang gửi yêu cầu cho từ: "${word}" với API Key: ***${apiKey.slice(-4)}`);
   try {
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -64,10 +63,7 @@ export async function fetchDictionaryInsightFromGroq(
 
     const data = await response.json();
     const rawContent = data?.choices?.[0]?.message?.content;
-    console.log('[Groq Fetch] Dữ liệu thô từ AI trả về:', rawContent);
-    
     const parsedData = JSON.parse(rawContent);
-    console.log('[Groq Fetch] Parse JSON thành công:', parsedData);
     return parsedData;
   } catch (err) {
     console.error('[Groq Fetch] Lỗi trong quá trình gọi hoặc parse dữ liệu:', err);
@@ -94,11 +90,9 @@ export function useDictionary() {
   const [isSaved, setIsSaved] = useState(false);
   const [allPhonetics, setAllPhonetics] = useState<Array<{ text?: string; audio?: string }>>([]);
 
-  // Core Pipeline xử lý từ điển
   useEffect(() => {
     console.log(`[Pipeline Effect] activeWord thay đổi: "${activeWord}"`);
     if (!activeWord.trim()) {
-      console.log('[Pipeline Effect] Từ khóa rỗng, reset toàn bộ state.');
       setResults(null);
       setError(false);
       setAllPhonetics([]);
@@ -111,11 +105,9 @@ export function useDictionary() {
       setIsSaved(false);
       setAllPhonetics([]);
       const cleanWord = activeWord.trim().toLowerCase();
-      console.log(`[Pipeline] Bắt đầu xử lý từ: "${cleanWord}"`);
 
       try {
         const resolvedApiKey = await keyApi.getRandomKey('groq');
-        console.log('[Pipeline] Kết quả lấy API Key:', resolvedApiKey ? 'Thành công' : 'Thất bại');
         if (!resolvedApiKey) {
           throw new Error('Không thể lấy API key Groq hợp lệ.');
         }
@@ -125,11 +117,10 @@ export function useDictionary() {
         const generatedPhonetics = [
           {
             text: aiInsightData?.phonetic || undefined,
-            audio: '', // Loại bỏ Google TTS cũ
+            audio: '',
           }
         ];
 
-        // Trường hợp AI từ chối dịch (Từ học thuật / chuyên ngành)
         if (aiInsightData?.refused) {
           console.warn(`[Pipeline] Từ bị từ chối dịch do thuộc bộ lọc học thuật. Lý do: ${aiInsightData.reason}`);
           const refusedResult: CustomDictionaryEntry = {
@@ -155,7 +146,6 @@ export function useDictionary() {
           return;
         }
 
-        // Trường hợp thành công thông thường
         const finalResult: CustomDictionaryEntry = {
           word: aiInsightData.word || cleanWord,
           phonetics: generatedPhonetics,
@@ -178,17 +168,12 @@ export function useDictionary() {
     startDictionaryPipeline();
   }, [activeWord]);
 
-  // Hàm phát âm thanh sử dụng Web Speech API có cơ chế chống nghẽn và chống lỗi interrupted
   const playAudio = (textToSpeak: string) => {
-    console.log(`[Audio API] Kích hoạt giọng đọc cho văn bản: "${textToSpeak}"`);
     
     if (!textToSpeak) return;
 
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      // Hủy tác vụ đọc cũ ngay lập tức
       window.speechSynthesis.cancel();
-
-      // Trì hoãn 50ms nhằm tạo khoảng nghỉ nhỏ để trình duyệt giải phóng bộ nhớ và trạng thái kẹt
       setTimeout(() => {
         if (window.speechSynthesis.speaking) {
           window.speechSynthesis.cancel();

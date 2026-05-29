@@ -209,7 +209,7 @@ export default function CollectionModal({
           <form onSubmit={handleCreateAndSave} className="flex gap-2 w-full">
             <input
               type="text"
-              placeholder="Ví dụ: Tuvung_Core, IELTS_2026..."
+              placeholder="Ví dụ: Tuvung..."
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
               className="flex-1 bg-[#f7f9f8] rounded-[12px] px-3.5 py-2.5 text-xs font-mono text-[#2d3436] placeholder:font-sans placeholder:text-[#2d3436]/30 outline-none border border-transparent focus:border-[#00cec9]/30 transition-all"

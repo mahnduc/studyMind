@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import FlashCardViewer from "./_components/FlashCardViewer";
 import { Sidebar } from "lucide-react";
 
-// Định nghĩa cấu trúc dữ liệu theo file JSON của bạn
 interface PartOfSpeech {
   partOfSpeech: string;
   definitionEn: string;
@@ -17,17 +16,20 @@ interface FlashCardItem {
   partsOfSpeech: PartOfSpeech[];
 }
 
-export default function FlashCard() {
+interface FlashCardProps {
+  initialCollection?: string;
+}
+
+export default function FlashCard({ initialCollection = "" }: FlashCardProps) {
   const [collections, setCollections] = useState<string[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState<string>("");
+  const [selectedCollection, setSelectedCollection] = useState<string>(initialCollection);
   const [cards, setCards] = useState<FlashCardItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-
-  // Quét danh sách các bộ sưu tập trong /system-collections/
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true); 
+  
   useEffect(() => {
     async function loadCollections() {
       try {
@@ -38,7 +40,6 @@ export default function FlashCard() {
         });
 
         const fileNames: string[] = [];
-        // @ts-ignore - Duyệt qua tất cả các file trong thư mục OPFS
         for await (const entry of dirHandle.values()) {
           if (entry.kind === "file" && entry.name.endsWith(".json")) {
             fileNames.push(entry.name.replace(".json", ""));
@@ -46,24 +47,30 @@ export default function FlashCard() {
         }
 
         setCollections(fileNames);
-        if (fileNames.length > 0) {
-          setSelectedCollection(fileNames[0]);
+        
+        // Không tự động chọn phần tử đầu tiên
+        if (initialCollection && fileNames.includes(initialCollection)) {
+          setSelectedCollection(initialCollection);
         } else {
-          setIsLoading(false);
+          setSelectedCollection(""); 
         }
       } catch (err) {
         console.error("Lỗi OPFS:", err);
         setError("Không thể quét thư mục bộ sưu tập.");
+      } finally {
         setIsLoading(false);
       }
     }
 
     loadCollections();
-  }, []);
+  }, [initialCollection]);
 
-  // 2. Đọc nội dung file JSON được chọn từ OPFS
   useEffect(() => {
-    if (!selectedCollection) return;
+    if (!selectedCollection) {
+      setCards([]);
+      setIsLoading(false);
+      return;
+    }
 
     async function loadCardData() {
       try {
@@ -92,7 +99,6 @@ export default function FlashCard() {
     loadCardData();
   }, [selectedCollection]);
 
-  // Điều hướng chuyển thẻ
   const nextCard = () => {
     if (cards.length === 0) return;
     setIsFlipped(false);
@@ -114,6 +120,7 @@ export default function FlashCard() {
   return (
     <div className="flex relative overflow-hidden flex-1 h-full w-full bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
 
+      {/* Sidebar */}
       <div className={`h-full bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-in-out relative flex-shrink-0 ${
           isCollapsed ? "w-0 opacity-0 pointer-events-none" : "w-64 opacity-100"
         }`}
@@ -134,7 +141,6 @@ export default function FlashCard() {
           </button>
         </div>
 
-        {/* Danh sách các bộ sưu tập */}
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {collections.length === 0 ? (
             <div className="text-sm text-slate-400 text-center py-8 font-medium">
@@ -149,12 +155,11 @@ export default function FlashCard() {
                   onClick={() => setSelectedCollection(name)}
                   className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${
                     isSelected
-                      ? "bg-[#00CEC9] text-white shadow-md shadow-[#FF3399]/20"
+                      ? "bg-[#00CEC9] text-white shadow-md"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center space-x-3 truncate">
-                    
                     <span className="truncate">{name}</span>
                   </div>
                 </button>
@@ -164,6 +169,7 @@ export default function FlashCard() {
         </div>
       </div>
 
+      {/* Button mở Sidebar */}
       {isCollapsed && (
         <button
           onClick={() => setIsCollapsed(false)}
@@ -175,19 +181,26 @@ export default function FlashCard() {
           </svg>
         </button>
       )}
+
+      {/* Khu vực nội dung chính */}
       <div className="flex flex-col items-center justify-start w-full h-full p-6 overflow-y-auto bg-slate-50/50">       
 
-        {/* THÔNG BÁO LỖI NẾU CÓ */}
         {error && (
           <div className="w-full max-w-md text-red-500 bg-red-50 px-4 py-2.5 rounded-xl border border-red-200 mb-4 text-center text-sm font-medium">
             {error}
           </div>
         )}
 
-        {/* NỘI DUNG CHÍNH CỦA TRANG HỌC */}
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-semibold animate-pulse">
             Đang đồng bộ dữ liệu từ hệ thống lưu trữ...
+          </div>
+        ) : !selectedCollection ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-3 mt-12">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-[#00CEC9] animate-pulse">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
+            </svg>
+            <p className="font-bold text-base text-slate-700">Mở menu để chọn bộ sưu tập</p>
           </div>
         ) : cards.length > 0 && currentCard ? (
           <FlashCardViewer
@@ -203,9 +216,9 @@ export default function FlashCard() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-slate-300">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
             </svg>
-            <p className="font-bold text-sm text-slate-500">Chưa có dữ liệu học tập</p>
+            <p className="font-bold text-sm text-slate-500">Bộ sưu tập này chưa có dữ liệu</p>
             <p className="text-[11px] max-w-xs text-center text-slate-400 leading-normal">
-              Vui lòng tạo thư mục <code className="bg-slate-200 text-red-500 px-1 py-0.5 rounded">system-collections</code> trong OPFS và thêm tệp tin định dạng cấu trúc <code className="bg-slate-200 text-red-500 px-1 py-0.5 rounded">*.json</code> để bắt đầu.
+              Vui lòng kiểm tra lại file <code className="bg-slate-200 text-red-500 px-1 py-0.5 rounded">{selectedCollection}.json</code> trong thư mục OPFS.
             </p>
           </div>
         )}
