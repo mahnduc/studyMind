@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { UploadCloud, Pen, ChevronRight } from "lucide-react";
+import { UploadCloud, Pen, ChevronRight, Lock, Sparkles, Plus } from "lucide-react";
 import Link from "next/link";
 
 interface CourseActionCardsProps {
@@ -40,7 +40,7 @@ export function CourseActionCards({
         </button>
       </div>
 
-      <div className="col-span-12 md:col-span-6 bg-white border border-gray-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+      {/* <div className="col-span-12 md:col-span-6 bg-white border border-gray-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
         <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-pink-500 mb-6">
           <Pen size={22} strokeWidth={2} />
         </div>
@@ -53,6 +53,20 @@ export function CourseActionCards({
             Mở Editor <ChevronRight size={16} strokeWidth={2} />
           </button>
         </Link>
+      </div> */}
+
+      <div className="col-span-12 md:col-span-6 border-2 border-dashed border-gray-200 p-6 rounded-3xl flex flex-col justify-center items-center text-center min-h-70 bg-gray-50/30">
+        <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 mb-4 select-none">
+          <Plus size={20} strokeWidth={2} />
+        </div>
+        
+        <h3 className="text-sm font-bold text-gray-400 tracking-tight mb-1 select-none">
+          Trống
+        </h3>
+        
+        <p className="text-gray-400/70 font-medium text-xs max-w-50 select-none">
+          Không gian chờ thiết lập cấu hình hoặc tiện ích mở rộng.
+        </p>
       </div>
     </div>
   );

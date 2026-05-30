@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, HelpCircle, BookOpen, Sparkles, Layers, UserPen } from "lucide-react";
-import { QuizCardData } from './types';
-import QuizSummaryModal from './_components/QuizSummaryModal';
-import QuizActiveSession from './_components/QuizActiveSession';
 import Link from 'next/link';
-import { QuizCard } from './_components/QuizCard';
+import { QuizCard } from '../collections/_components/QuizCard';
+import { QuizCardData } from '@/types/quiz.type';
 
 interface OfficialCourseData {
   id: string;
@@ -100,15 +98,6 @@ export default function CoursePage() {
     setSelectedSummaryQuiz(null);
     setActiveQuiz(quiz);
   };
-
-  if (activeQuiz) {
-    return (
-      <QuizActiveSession
-        activeQuiz={activeQuiz}
-        onExit={() => setActiveQuiz(null)}
-      />
-    );
-  }
 
   return (
     <div className="w-full flex flex-col gap-8 p-5 lg:p-8 animate-in fade-in duration-500 bg-[#F7F9FB] min-h-screen">
@@ -247,13 +236,13 @@ export default function CoursePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {filteredQuizzes.map((quiz) => (
+                  {/* {filteredQuizzes.map((quiz) => (
                     <QuizCard
                       key={quiz.id}
                       quiz={quiz}
                       onClick={() => setSelectedSummaryQuiz(quiz)}
                     />
-                  ))}
+                  ))} */}
                 </div>
               )}
             </div>
@@ -262,26 +251,6 @@ export default function CoursePage() {
         </div>
       )}
 
-      {/* MODAL XEM TRƯỚC ĐỀ THI */}
-      {selectedSummaryQuiz && (
-        <QuizSummaryModal
-          quiz={selectedSummaryQuiz}
-          onClose={() => setSelectedSummaryQuiz(null)}
-          onStartQuiz={() => handleStartQuiz(selectedSummaryQuiz)}
-        />
-      )}
-
-      {/* CUSTOM STYLE FOR BENTO HOVER EFFECTS */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #E5E5E5;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #B2BEC3;
-        }
-      `}</style>
     </div>
   );
 }

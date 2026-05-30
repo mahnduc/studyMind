@@ -1,99 +1,163 @@
 "use client";
 
-import { Search } from "lucide-react";
-import Link from "next/link";
+import React, { useState } from "react";
+import { ArrowRight, Loader2, Maximize2, Search } from "lucide-react";
+import { useAssistant } from "./_hooks/useDiscoverState";
+import { CourseActionCards } from "./_components/CourseActionCards";
+import { FileList } from "./_components/FileList";
+import { QuizSummaryCard } from "./_components/QuizSummaryCard";
+import { QuizToolbar } from "./_components/QuizToolbar";
+import QuizPracticeScreen from "@/components/quiz/QuizPracticeScreen";
+import { FileViewer } from "./_components/FileViewer";
 
 export default function DiscoverPage() {
+  const {
+    files,
+    loading,
+    isIngesting,
+    selectedFile,
+    fileInputRef,
+    triggerFileInput,
+    handleFileUpload,
+    handleSelectFile,
+    deleteFile,
+    isGeneratingQuiz,
+    requestedQuestions,
+    setRequestedQuestions,
+    handleCreateQuiz,
+    cleanFolderName,
+    isPending,
+    isActionDisabled,
+    quizData,
+    isLoadingQuiz,
+    showToolbar,
+    isPracticing,
+    handleToggleToolbar,
+    handleStartQuiz,
+    handleStopQuiz,
+  } = useAssistant();
+
+  const [isViewingFileIsland, setIsViewingFileIsland] = useState(false);
+
+  React.useEffect(() => {
+    setIsViewingFileIsland(false);
+  }, [selectedFile]);
+
+  if (isPracticing && quizData) {
+    return (
+      <div className="w-full h-full p-6 lg:p-10 overflow-y-auto">
+        <QuizPracticeScreen
+          quizData={quizData} 
+          onBack={handleStopQuiz}
+        />
+      </div>
+    );
+  }
+
+  if (isViewingFileIsland && selectedFile) {
+    return (
+      <div className="w-full h-screen bg-[#F8FAFC] animate-fade-in overflow-hidden">
+        <div className="w-full h-full">
+          <FileViewer
+            fileName={selectedFile}
+            onClose={() => setIsViewingFileIsland(false)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div 
-      className="flex flex-col md:grid md:grid-cols-3 gap-6 p-6 overflow-y-auto flex-1 h-full w-full bg-[#f7f9f8]" 
-      style={{ fontFamily: "'Nunito', sans-serif" }}
-    >
-      <div className="md:col-span-2 flex flex-col justify-between p-6 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FF3399]/10 text-[#FF3399]">
-            Trợ lý AI
-          </span>
-          <h3 className="text-xl font-extrabold text-[#2d3436] mt-3">Thiết lập mục tiêu</h3>
-          <p className="text-sm text-[#2d3436]/70 mt-2 max-w-md">
-            Agent thông minh hỗ trợ phân tích dữ liệu và thiết lập lộ trình học tập, rèn luyện cá nhân hóa dành riêng cho bạn.
-          </p>
-        </div>
-        <div className="mt-6 flex justify-end">
-          <Link href="/dashboard/goal">
-            <button className="px-4 py-2 text-sm font-semibold text-white bg-[#FF3399] rounded-xl hover:bg-[#FF3399]/90 active:scale-95 transition-all">
-              Bắt đầu ngay
-            </button>
-          </Link>
-        </div>
-      </div>
-
-      <div className="group flex flex-col justify-between p-6 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200">
-        <div>
-            <div className="flex justify-between items-start">
-            <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#00cec9]/10 text-[#00cec9]">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-            </div>
-            </div>
-            
-            <div className="mt-4">
-            <h4 className="text-lg font-bold text-[#2d3436] group-hover:text-[#00cec9] transition-colors">Thư viện</h4>
-            <p className="text-xs text-[#2d3436]/60 mt-1">Lưu trữ, quản lý và trích xuất tri thức từ các nguồn tài liệu chuẩn hóa của bạn.</p>
-            </div>
-        </div>
-
-        <div className="mt-5">
-            <Link href="/dashboard/courses" className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-[#00cec9] font-bold hover:underline">
-            <span>Truy cập</span>
-            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-            </Link>
-        </div>
-        </div>
-
-      <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-200 flex flex-col justify-between">
-        <div>
-          <span className="text-xs font-bold text-[#2d3436]/50 uppercase tracking-wide">Không gian quan sát</span>
-          <h4 className="text-lg font-bold text-[#2d3436] mt-1">Sơ đồ tư duy</h4>
-          <p className="text-xs text-[#2d3436]/60 mt-1">Trực quan hóa mạng lưới kiến thức đã trích xuất từ tài liệu.</p>
-        </div>
-        
-        <div className="my-4 flex items-center justify-center gap-2 bg-[#f7f9f8] p-3 rounded-xl border border-dashed border-slate-200">
-          <div className="w-3 h-3 rounded-full bg-[#00cec9]"></div>
-          <div className="h-0.5 w-8 bg-slate-300"></div>
-          <div className="w-4 h-4 rounded-full bg-[#FF3399]"></div>
-          <div className="h-0.5 w-6 bg-slate-300"></div>
-          <div className="w-3 h-3 rounded-full bg-[#2d3436]"></div>
-        </div>
-
-        <Link href="/dashboard/courses/create/mindmap" className="text-xs text-[#2d3436] font-semibold hover:text-[#FF3399] transition-colors">
-          Mở trình xem cây sơ đồ →
-        </Link>
-      </div>
-
-      <div className="md:col-span-2 p-6 bg-[#2d3436] text-[#f7f9f8] rounded-2xl shadow-md flex flex-col justify-between group">
-        <div>
-          <div className="flex justify-between items-center">
-            <h4 className="text-lg font-bold text-white group-hover:text-[#00cec9] transition-colors">Tra cứu tài liệu tri thức</h4>
-            <span className="text-[11px] font-mono text-[#00cec9] bg-white/5 px-2 py-0.5 rounded border border-white/10">Search</span>
+    <div className="w-full h-full bg-[#F8FAFC] font-sans text-gray-700 antialiased flex flex-col">
+      <div className="p-6 lg:p-10 w-full flex-1 overflow-y-auto">
+        <div className="w-full max-w-6xl mx-auto pb-10 flex flex-col gap-8">
+          
+          <div className="w-full">
+            <CourseActionCards 
+              fileInputRef={fileInputRef}
+              triggerFileInput={triggerFileInput}
+              handleFileUpload={handleFileUpload}
+            />
           </div>
-          <p className="text-sm text-[#f7f9f8]/70 mt-1 max-w-xl">
-            Tra cứu kiến thức từ nguồn tài liệu sẵn có của bạn
-          </p>
-        </div>
 
-        <Link href="/dashboard/lookup" className="block mt-6">
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-2 rounded-xl hover:border-[#00cec9] transition-colors cursor-pointer">
-                <Search size={16} className="text-[#f7f9f8]/40 ml-2 shrink-0" />
-                <span className="text-sm text-white/30 flex-1 select-none py-0.5">
-                Nhập để chuyển đến tra cứu...
-                </span>
-                <span className="text-[10px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded font-mono">
-                Ask
-                </span>
-            </div>
-        </Link>
+          <div className="w-full flex flex-col gap-6">
+            <FileList 
+              files={files}
+              loading={loading}
+              selectedFile={selectedFile}
+              isIngesting={isIngesting}
+              isPending={isPending}
+              handleSelectFile={handleSelectFile}
+              deleteFile={deleteFile}
+            />
+
+            {selectedFile && (
+              <div className="w-full transition-all duration-500 animate-fade-in flex flex-col gap-4">
+                {isLoadingQuiz ? (
+                  <div className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center min-h-[120px] gap-2">
+                    <Loader2 className="animate-spin text-indigo-500" size={24} />
+                    <p className="font-medium text-gray-400 text-xs">Đang kiểm tra bộ đề dữ liệu cục bộ...</p>
+                  </div>
+                ) : (
+                  <>
+                    <QuizSummaryCard 
+                      quizData={quizData}
+                      selectedFile={selectedFile}
+                      showToolbar={showToolbar}
+                      handleToggleToolbar={handleToggleToolbar}
+                      handleStartQuiz={handleStartQuiz}
+                    />
+
+                    {showToolbar && (
+                      <QuizToolbar 
+                        isActionDisabled={isActionDisabled}
+                        requestedQuestions={requestedQuestions}
+                        setRequestedQuestions={setRequestedQuestions}
+                        onTriggerCreateQuiz={async () => {
+                          await handleCreateQuiz(requestedQuestions, cleanFolderName);
+                        }}
+                        isPending={isPending}
+                        isGeneratingQuiz={isGeneratingQuiz}
+                        isIngesting={isIngesting}
+                      />
+                    )}
+
+                    <div 
+                      onClick={() => setIsViewingFileIsland(true)}
+                      className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6 cursor-pointer"
+                    >
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="bg-linear-to-br from-indigo-500 to-violet-500 text-white p-4 rounded-2xl shadow-sm shrink-0 flex items-center justify-center">
+                          <Maximize2 size={26} />
+                        </div>
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-md">
+                              Chế độ tập trung
+                            </span>
+                            <span className="text-gray-300 text-xs">•</span>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md">
+                              <Search size={10} /> Tra cứu thông minh
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-gray-800 text-lg">Chi tiết tài liệu</h3>
+                          <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                            Mở không gian đọc file <span className="font-semibold text-indigo-600">"{selectedFile}"</span> riêng tư, hỗ trợ tìm và truy vấn thông tin nhanh chóng.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="self-end md:self-center shrink-0 bg-gray-50 text-gray-400 p-3 rounded-full">
+                        <ArrowRight size={20} />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
       </div>
     </div>
   );

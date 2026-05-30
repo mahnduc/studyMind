@@ -71,11 +71,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-[#FFF4E0] px-3 py-1.5 rounded-full border-b-2 border-[#FFB800]">
+            {/* <div className="flex items-center gap-2 bg-[#FFF4E0] px-3 py-1.5 rounded-full border-b-2 border-[#FFB800]">
               <Link href="/simple">
                 <span className="text-orange-500 text-sm font-black cursor-pointer">Soạn thảo</span>
               </Link>
-            </div>
+            </div> */}
             <Link href="/dashboard/settings">
               <button className="h-10 w-10 rounded-full border-2 border-[#E5E5E5] overflow-hidden cursor-pointer">
                 <div className="bg-[#B2BEC3] w-full h-full flex items-center justify-center text-white font-bold text-xs">

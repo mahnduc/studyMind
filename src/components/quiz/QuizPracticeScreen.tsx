@@ -52,9 +52,7 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentQuestion = quizData.questions[currentIdx];
 
-  // Đếm số câu hỏi đã trả lời
   const answeredCount = Object.keys(selectedAnswers).length;
-  // Kiểm tra xem đã hoàn thành toàn bộ bài trắc nghiệm chưa
   const isAllAnswered = answeredCount === quizData.totalQuestions;
 
   useEffect(() => {
@@ -80,7 +78,6 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
   };
 
   const handleSubmitQuiz = async () => {
-    // Chặn nộp nếu chưa làm hết hoặc đã nộp rồi
     if (isSubmitted || !isAllAnswered) return;
     if (timerRef.current) clearInterval(timerRef.current);
 
@@ -115,7 +112,6 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
 
   return (
     <div className="w-full max-w-5xl space-y-6 animate-in fade-in duration-300">
-      {/* Top Navigation Panel */}
       <div className="flex items-center justify-between bg-white px-6 py-4 border border-gray-100 rounded-3xl shadow-sm">
         <button 
           onClick={onBack}
@@ -129,9 +125,8 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
         </div>
       </div>
 
-      {/* Banner kết quả sau khi nộp */}
       {isSubmitted && (
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-4 bg-white/10 rounded-2xl text-yellow-400 shrink-0">
               <Award size={36} />
@@ -146,7 +141,7 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
               <p className="text-[10px] font-bold uppercase text-indigo-200">Đúng</p>
               <p className="text-xl font-black text-emerald-400">{totalCorrect}/{quizData.totalQuestions}</p>
             </div>
-            <div className="w-[1px] h-8 bg-white/20" />
+            <div className="w-px h-8 bg-white/20" />
             <div>
               <p className="text-[10px] font-bold uppercase text-indigo-200">Chính xác</p>
               <p className="text-xl font-black text-cyan-400">{Math.round((totalCorrect / quizData.totalQuestions) * 100)}%</p>
@@ -161,7 +156,6 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
         </div>
       )}
 
-      {/* Layout cấu trúc phần thân */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="space-y-2">
@@ -221,7 +215,6 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
           </div>
         </div>
 
-        {/* Lưới tiến độ danh sách câu hỏi */}
         <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex flex-col justify-between space-y-6">
           <div>
             <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-4">Danh sách câu hỏi</h4>
@@ -254,11 +247,9 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
             </div>
           </div>
 
-          {/* Khu vực nút điều khiển & Thông báo xác nhận */}
           <div className="space-y-3">
             {!isSubmitted ? (
               <>
-                {/* THÔNG BÁO NHẮC NHỞ: Chỉ hiển thị khi chưa tích đủ câu hỏi */}
                 {!isAllAnswered && (
                   <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <AlertCircle size={16} className="shrink-0 mt-0.5" />

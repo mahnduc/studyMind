@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Edit2Icon,
 } from "lucide-react";
-import { opfsApi } from "../../lib/opfs/opfsApis";
+import { opfsApi } from "../../../lib/opfs/opfsApis";
 
 import { useEditorStore } from "@/stores/editorStore";
 import Link from "next/link";

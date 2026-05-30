@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import DashboardUtil from './_components/DashboardUtil';
-import DashboardStats from './_components/DashboardStats'; 
+import DashboardUtil from '../../components/dashboard/DashboardUtil';
+import DashboardStats from '../../components/dashboard/DashboardStats'; 
 import { useProfileStore } from "@/stores/profileStore";
 
 interface HeatmapDay {

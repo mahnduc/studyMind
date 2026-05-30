@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { getAllKnowledgeBases, initializeSearchFromStorage, getVectorIndexFromStorage } from "../../../../lib/rag/api";
+import { getAllKnowledgeBases, initializeSearchFromStorage, getVectorIndexFromStorage } from "../lib/rag/api";
 import { 
   generateQueryEmbedding, 
   cosineSimilarity, 
   fuseResults, 
   readJsonFromOPFS,
   StoredChunk 
-} from "../../../../lib/rag/search-logic";
-import { keyApi } from "../../settings/api-key/_api/key.api";
+} from "../lib/rag/search-logic";
+import { keyApi } from "../app/dashboard/settings/api-key/_api/key.api";
 
 export interface HybridResultItem {
   chunk: StoredChunk;
@@ -20,7 +20,6 @@ export function useHybridSearch() {
   const [selectedKB, setSelectedKB] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [statusText, setStatusText] = useState<string>("");
   
   // Quản lý API Key và cấu hình Mô hình Groq
   const [apiKey, setApiKey] = useState<string>("");
@@ -100,11 +99,9 @@ export function useHybridSearch() {
     setLoading(true);
     setResults([]);
     setLlmResponse("");
-    setStatusText("Đang chuẩn bị tìm kiếm...");
 
     try {
-      // --- Bước A: Đọc tất cả các chunks gốc từ OPFS ---
-      setStatusText("Đang tải dữ liệu gốc từ bộ nhớ OPFS...");
+      // Đọc tất cả các chunks gốc từ OPFS
       let allChunksData = await readJsonFromOPFS<any>(selectedKB, "chunks.json");
       
       if (!allChunksData) {
@@ -131,19 +128,15 @@ export function useHybridSearch() {
         }
       });
 
-      // --- Bước B: Thực hiện BM25 Search ---
-      setStatusText("Đang phân tích từ khóa (BM25 Search)...");
+      // Thực hiện BM25 Search
       const bm25Engine = await initializeSearchFromStorage(selectedKB);
       let bm25Results: any[] = [];
       if (bm25Engine) {
         bm25Results = bm25Engine.search(query, 10); 
       }
 
-      // --- Bước C: Thực hiện Vector Search ---
-      setStatusText("Đang tính toán vector hóa câu hỏi (Embedding)...");
+      // Thực hiện Vector Search ---
       const queryEmbedding = await generateQueryEmbedding(query);
-      
-      setStatusText("Đang quét độ tương đồng vector (Cosine Similarity)...");
       const vectorIndex = await getVectorIndexFromStorage(selectedKB);
       
       const vectorScores = vectorIndex.map((item) => {
@@ -160,8 +153,7 @@ export function useHybridSearch() {
         .filter(item => item.score > 0)
         .slice(0, 10);
 
-      // --- Bước D: RRF Hybrid Fusion ---
-      setStatusText("Đang tối ưu và hợp nhất kết quả bằng thuật toán RRF...");
+      // RRF Hybrid Fusion
       const fused = fuseResults(bm25Results, topVectorResults, 60);
 
       const finalResults = fused.map((res: any) => {
@@ -175,19 +167,14 @@ export function useHybridSearch() {
 
       setResults(finalResults);
 
-      // --- Bước E: Sinh câu trả lời thông qua cấu hình Groq ---
+      // Sinh câu trả lời thông qua cấu hình Groq
       if (finalResults.length > 0) {
-        setStatusText("Đang gửi ngữ cảnh sang Groq và biên soạn câu trả lời chuẩn xác...");
         const answer = await generateFinalAnswer(query, finalResults);
         setLlmResponse(answer);
-        setStatusText("Đã hoàn tất phản hồi hoàn chỉnh!");
-      } else {
-        setStatusText("Không tìm thấy thông tin phù hợp trong bộ dữ liệu.");
       }
 
     } catch (error: any) {
       console.error(error);
-      setStatusText(`Có lỗi xảy ra: ${error?.message || error}`);
     } finally {
       setLoading(false);
     }
@@ -200,7 +187,6 @@ export function useHybridSearch() {
     query,
     setQuery,
     loading,
-    statusText,
     apiKey,
     setApiKey,
     showKey,

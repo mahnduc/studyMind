@@ -35,8 +35,6 @@ export default function FlashCardViewer({
 
   return (
     <div className="w-full max-w-md flex-1 flex flex-col items-center justify-center min-h-[380px]">
-
-      {/* Chỉ số thẻ */}
       <div className="text-slate-400 text-xs font-black tracking-widest mb-2 bg-slate-200/60 px-3 py-1 rounded-full">
         {currentIndex + 1} / {cards.length}
       </div>
