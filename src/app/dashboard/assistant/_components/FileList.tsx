@@ -44,7 +44,7 @@ export function FileList({
         {files.map((file) => {
           const isSelected = selectedFile === file.name;
           const isThisFileIngesting = isSelected && isIngesting;
-
+          
           return (
             <div
               key={file.name}

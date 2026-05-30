@@ -4,7 +4,7 @@ import React from "react";
 import { useOPFSFiles } from "./useOPFSFiles";
 import { useUploadToOPFS } from "./useUploadToOPFS";
 import { useIngestFile } from "./useIngestFile";
-import { useQuiz } from "./useQuiz"; // Import hook mới tách
+import { useQuiz } from "./useQuiz";
 
 export function useAssistant() {
   const DIR_NAME = "system-raw-file";
@@ -37,7 +37,6 @@ export function useAssistant() {
   // Tính toán tên folder sạch từ file được chọn
   const cleanFolderName = selectedFile ? selectedFile.replace(/\.[^/.]+$/, "") : "";
 
-  // Đăng ký sử dụng useQuiz bên trong useAssistant
   const quiz = useQuiz({
     selectedFile,
     cleanFolderName,

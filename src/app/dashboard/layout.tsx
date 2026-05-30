@@ -20,7 +20,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
 
-  // Đăng ký lấy state và các hàm xử lý từ Zustand Store
   const profile = useProfileStore((state) => state.profile);
   const loadProfile = useProfileStore((state) => state.loadProfile);
 
