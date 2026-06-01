@@ -31,7 +31,12 @@ async function executeToolCall(
 
   try {
     const result: ToolResult = await executor.execute(args, session);
-    return { role: "tool", tool_call_id: toolCall.id, name: functionName, content: JSON.stringify(result) };
+    return { 
+      role: "tool", 
+      tool_call_id: toolCall.id, 
+      name: functionName, 
+      content: JSON.stringify(result) 
+    };
   } catch (error: any) {
     return {
       role: "tool",
@@ -42,7 +47,7 @@ async function executeToolCall(
   }
 }
 
-// HÀM ĐIỀU PHỐI CHÍNH (Chỉ thuần túy quản lý luồng lặp)
+// HÀM ĐIỀU PHỐI CHÍNH (Đã fix lỗi Payload Groq)
 export async function groqChat({ message, agent, session }: ChatInput): Promise<string> {
   initializeAgentState(agent, session);
   
@@ -53,31 +58,57 @@ export async function groqChat({ message, agent, session }: ChatInput): Promise<
 
     const messages = buildMessages(agent, session);
 
-    // Giao việc cho Gateway gọi LLM
-    const data = await requestGroq({
+    // 1. CHUẨN BỊ PAYLOAD AN TOÀN CHO GROQ
+    const requestBody: Record<string, any> = {
       model: agent.model || GROQ_DEFAULT_MODEL,
-      temperature: agent.temperature ?? 0.7,
+      temperature: agent.temperature ?? 0.2, // Giảm xuống 0.2 cho Agent ổn định cấu trúc JSON
       max_tokens: agent.maxTokens ?? 1024,
       messages,
-      tools: agent.tools,
-      tool_choice: "auto",
-    });
+    };
+
+    // Chỉ đính kèm tools nếu mảng thực sự có phần tử để tránh lỗi 400 Bad Request
+    if (agent.tools && agent.tools.length > 0) {
+      requestBody.tools = agent.tools;
+      requestBody.tool_choice = "auto";
+    }
+
+    // Giao việc cho Gateway gọi LLM
+    const data = await requestGroq(requestBody);
+
+    if (!data?.choices?.[0]?.message) {
+      throw new Error("Không nhận được phản hồi hợp lệ từ Groq API.");
+    }
 
     const assistantMessage = data.choices[0].message;
 
-    session.history.push({
+    // 2. CHUẨN HÓA MESSAGE KHI PUSH VÀO HISTORY
+    const newAssistantMessage: ChatMessage = {
       role: "assistant",
       content: assistantMessage.content || "",
-      tool_calls: assistantMessage.tool_calls,
-    });
+    };
 
-    if (!assistantMessage.tool_calls) {
+    // Nếu LLM thực sự có gọi tools, lọc sạch và ép đúng format OpenAI/Groq trước khi lưu history
+    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      newAssistantMessage.tool_calls = assistantMessage.tool_calls.map((tc: any) => ({
+        id: tc.id,
+        type: "function",
+        function: {
+          name: tc.function.name,
+          arguments: tc.function.arguments,
+        },
+      }));
+    }
+
+    session.history.push(newAssistantMessage);
+
+    // Nếu không cần gọi thêm công cụ nào nữa thì dừng vòng lặp
+    if (!newAssistantMessage.tool_calls || newAssistantMessage.tool_calls.length === 0) {
       session.state.isFinished = true;
-      return assistantMessage.content;
+      return newAssistantMessage.content || "";
     }
 
     // Điều phối thực thi hàng loạt các Tool Calls
-    const toolExecutions = assistantMessage.tool_calls.map((toolCall: ToolCall) =>
+    const toolExecutions = newAssistantMessage.tool_calls.map((toolCall: ToolCall) =>
       executeToolCall(toolCall, agent, session)
     );
     

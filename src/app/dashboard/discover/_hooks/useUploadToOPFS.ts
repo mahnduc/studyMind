@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef } from "react";
 import { MAX_FILE_SIZE_MB } from "@/utils/constant";
 import { convertToHtml } from "mammoth";
@@ -10,18 +12,17 @@ interface UseUploadOptions {
 
 async function convertDocxFileToMdContent(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
-
   const result = await convertToHtml({ arrayBuffer });
-  const htmlContent = result.value; 
+  const htmlContent = result.value;
 
   const turndownService = new TurndownService({
-    headingStyle: "atx", 
+    headingStyle: "atx",
     hr: "---",
     bulletListMarker: "*",
     strongDelimiter: "**",
-    emDelimiter: "_"
+    emDelimiter: "_",
   });
-  
+
   return turndownService.turndown(htmlContent);
 }
 
@@ -30,8 +31,8 @@ export function useUploadToOPFS({ directoryName = "system-raw-file", onUploadSuc
 
   function sanitizeFileName(fileName: string): string {
     const baseNameWithExt = fileName.split(/[/\\]/).pop() || fileName;
-    const lastDotIndex = baseNameWithExt.lastIndexOf('.');
-    const ext = lastDotIndex !== -1 ? baseNameWithExt.substring(lastDotIndex) : '';
+    const lastDotIndex = baseNameWithExt.lastIndexOf(".");
+    const ext = lastDotIndex !== -1 ? baseNameWithExt.substring(lastDotIndex) : "";
     let nameWithoutExt = lastDotIndex !== -1 ? baseNameWithExt.substring(0, lastDotIndex) : baseNameWithExt;
 
     nameWithoutExt = nameWithoutExt
@@ -53,8 +54,8 @@ export function useUploadToOPFS({ directoryName = "system-raw-file", onUploadSuc
     if (!file) return;
 
     const allowedExtensions = ["md", "txt", "docx"];
-    const fileExtension = file.name.split('.').pop()?.toLowerCase() || "";
-    
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+
     if (!allowedExtensions.includes(fileExtension)) {
       alert("Định dạng file không hợp lệ! Hệ thống chỉ hỗ trợ các file: .md, .txt, .docx");
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -71,13 +72,13 @@ export function useUploadToOPFS({ directoryName = "system-raw-file", onUploadSuc
     try {
       const root = await navigator.storage.getDirectory();
       const workspaceHandle = await root.getDirectoryHandle(directoryName, { create: true });
-      
+
       let safeFileName = sanitizeFileName(file.name);
       let contentToSave: Blob | File | string = file;
 
       if (fileExtension === "docx") {
         try {
-          safeFileName = safeFileName.replace(/\.docx$/i, '.md');
+          safeFileName = safeFileName.replace(/\.docx$/i, ".md");
           contentToSave = await convertDocxFileToMdContent(file);
         } catch (convError) {
           console.error("Lỗi khi chuyển đổi .docx sang Markdown:", convError);
@@ -93,12 +94,12 @@ export function useUploadToOPFS({ directoryName = "system-raw-file", onUploadSuc
       await writable.close();
 
       if (fileInputRef.current) fileInputRef.current.value = "";
-      
+
       if (onUploadSuccess) {
         onUploadSuccess({
           originalType: fileExtension,
           savedFileName: safeFileName,
-          savedPath: `${directoryName}/${safeFileName}`
+          savedPath: `${directoryName}/${safeFileName}`,
         });
       }
     } catch (error) {

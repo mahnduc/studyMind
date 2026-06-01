@@ -50,24 +50,29 @@ export default function HomePage() {
     }
 
     // Dữ liệu ngày
-    for (let d = 1; d <= daysInMonth; d++) {
-      const currentDate = new Date(year, month, d);
-      const dayIdx = currentDate.getDay();
-      const dateKey = currentDate.toLocaleDateString('sv-SE');
-      const xpAmount = dailyXpData[dateKey] || 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const currentDate = new Date(year, month, d);
+    const dayIdx = currentDate.getDay();
+    const dateKey = currentDate.toLocaleDateString('sv-SE');
 
-      gridCells.push({
-        dateKey,
-        dayIdx,
-        xp: xpAmount,
-        dayOfMonth: d,
-        formattedDate: currentDate.toLocaleDateString('vi-VN', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        })
-      });
-    }
+    const dayLogs = dailyXpData[dateKey] || [];
+    
+    const xpAmount = Array.isArray(dayLogs) 
+      ? dayLogs.reduce((sum, log) => sum + (log.amount || 0), 0) 
+      : 0;
+
+    gridCells.push({
+      dateKey,
+      dayIdx,
+      xp: xpAmount, // Bây giờ xpAmount chắc chắn là một biến kiểu 'number'
+      dayOfMonth: d,
+      formattedDate: currentDate.toLocaleDateString('vi-VN', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    });
+  }
 
     // Padding cuối tháng
     while (gridCells.length % 7 !== 0) {

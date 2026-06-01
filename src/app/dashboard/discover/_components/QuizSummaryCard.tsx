@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { HelpCircle, List, Calendar, Settings2, ArrowRight, ChevronUp, ChevronDown } from "lucide-react";
+import { HelpCircle, List, Calendar, Settings2, ArrowRight } from "lucide-react";
 import { SavedQuizData } from "@/lib/rag/qa-generator";
 
 interface QuizSummaryCardProps {
@@ -14,6 +14,7 @@ interface QuizSummaryCardProps {
 
 export function QuizSummaryCard({
   quizData,
+  selectedFile, // Đã map đúng property nhận từ Page vào component
   showToolbar,
   handleToggleToolbar,
   handleStartQuiz,
@@ -21,24 +22,29 @@ export function QuizSummaryCard({
 
   if (!quizData) {
     return (
-      <div className="w-full bg-white border border-gray-100 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <div className="w-full bg-white border border-gray-100 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left animate-fade-in">
         <div className="space-y-1">
-          <p className="font-semibold text-gray-700 text-sm">Tài liệu này chưa có bộ câu hỏi trắc nghiệm</p>
-          <p className="text-xs text-gray-400">Vui lòng mở cài đặt công cụ để phân tích và khởi tạo bộ bài tập AI mới.</p>
+          <p className="font-semibold text-gray-700 text-sm">
+            Tài liệu <span className="text-indigo-600">"{selectedFile}"</span> chưa có bộ câu hỏi
+          </p>
+          <p className="text-xs text-gray-400">Hệ thống đã nạp tri thức cục bộ thành công. Bạn có thể mở công cụ cấu hình để khởi tạo bài tập trắc nghiệm AI mới.</p>
         </div>
         <button
           onClick={handleToggleToolbar}
-          className="px-5 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-xl transition-all flex items-center gap-2 mx-auto md:mx-0"
+          className={`px-5 py-3 font-bold text-xs rounded-xl transition-all flex items-center gap-2 mx-auto md:mx-0 shadow-xs
+            ${showToolbar 
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600'}`}
         >
           <Settings2 size={16} />
-          Tạo trắc nghiệm
+          {showToolbar ? "Đóng cài đặt" : "Tạo trắc nghiệm"}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-indigo-100 transition-all duration-300 group">
+    <div className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-indigo-100 transition-all duration-300 group animate-fade-in">
       <div className="flex items-start gap-4 flex-1 min-w-0">
         <div className="bg-linear-to-br from-emerald-500 to-teal-500 text-white p-4 rounded-2xl shadow-md shrink-0">
           <HelpCircle size={26} />

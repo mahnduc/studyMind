@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ArrowRight, Loader2, Maximize2, Search } from "lucide-react";
-import { useAssistant } from "./_hooks/useDiscoverState";
+import { useAssistant } from "./_hooks/useAssistant";
 import { CourseActionCards } from "./_components/CourseActionCards";
 import { FileList } from "./_components/FileList";
 import { QuizSummaryCard } from "./_components/QuizSummaryCard";
@@ -87,7 +87,7 @@ export default function DiscoverPage() {
               selectedFile={selectedFile}
               isIngesting={isIngesting}
               isPending={isPending}
-              handleSelectFile={handleSelectFile}
+              handleSelectFile={handleSelectFile} // Truyền trực tiếp hàm sạch từ hook điều phối
               deleteFile={deleteFile}
             />
 

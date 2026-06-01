@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { ArrowLeft, ArrowRight, Clock, Award, RotateCcw, CheckCircle2, AlertCircle } from "lucide-react";
 import { SavedQuizData } from "@/lib/rag/qa-generator";
 import { QuizHistoryAttempt, QuizHistoryFile } from "@/types/quiz.type";
+import { useProfileStore } from "@/stores/profileStore";
+import { appEmitter } from "@/utils/eventEmitter";
 
 interface QuizPracticeScreenProps {
   quizData: SavedQuizData;
@@ -37,7 +39,6 @@ async function saveAttemptToOPFS(knowledgeBase: string, attempt: QuizHistoryAtte
     const writable = await fileHandle.createWritable();
     await writable.write(JSON.stringify(historyData, null, 2));
     await writable.close();
-    console.log("[OPFS] Ghi lịch sử thành công:", fileName);
   } catch (err) {
     console.error("[OPFS] Thất bại khi ghi lịch sử bài làm:", err);
   }
@@ -97,7 +98,9 @@ export default function QuizPracticeScreen({ quizData, onBack }: QuizPracticeScr
       duration,
       accuracy,
     };
-
+    console.log(attemptResult)
+    await appEmitter.emit('LEARNING_HABIT', JSON.stringify(attemptResult));
+    await useProfileStore.getState().addXp(15);
     await saveAttemptToOPFS(quizData.knowledgeBase, attemptResult);
   };
 

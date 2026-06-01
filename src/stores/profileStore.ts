@@ -1,11 +1,16 @@
 import { create } from 'zustand';
 
-// 1. Định nghĩa cấu trúc dữ liệu mới cho Profile
+// 1. Định nghĩa chi tiết cấu trúc log cho mỗi lần cộng XP
+export interface XpLog {
+  timestamp: string; // ISO String: "2026-05-31T09:30:00.000Z"
+  amount: number;    // Số XP được cộng: 50
+}
+
 export interface UserProfile {
   username: string;
   updatedAt: string;
   totalXp: number;
-  dailyXp: Record<string, number>; // Định dạng: { "2026-05-22": 120, "2026-05-23": 50 }
+  dailyXp: Record<string, XpLog[]>;
 }
 
 interface ProfileState {
@@ -16,12 +21,10 @@ interface ProfileState {
   updateProfile: (name: string) => Promise<boolean>;
   hasUsername: () => boolean;
   
-  // Các hàm bổ sung cho tính năng XP
   addXp: (amount: number) => Promise<boolean>;
   getLevel: () => number;
 }
 
-// Giá trị khởi tạo mặc định khi tạo mới profile
 const DEFAULT_XP_DATA = {
   totalXp: 0,
   dailyXp: {},
@@ -50,7 +53,17 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
       const parsedData = JSON.parse(text);
       
-      // Đảm bảo nếu file cũ chưa có trường XP, hệ thống tự bù giá trị mặc định thay vì trả về undefined
+      if (parsedData.dailyXp) {
+        for (const date in parsedData.dailyXp) {
+          if (typeof parsedData.dailyXp[date] === 'number') {
+            parsedData.dailyXp[date] = [{
+              timestamp: new Date(date).toISOString(), 
+              amount: parsedData.dailyXp[date]
+            }];
+          }
+        }
+      }
+
       const profileData: UserProfile = {
         ...DEFAULT_XP_DATA,
         ...parsedData
@@ -77,7 +90,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
       const writable = await fileHandle.createWritable();
       
-      // Giữ lại dữ liệu XP cũ nếu đang thực hiện cập nhật tên, ngược lại lấy mặc định = 0
       const currentProfile = get().profile;
       const newProfileData: UserProfile = {
         username: name.trim(),
@@ -103,33 +115,35 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     return !!get().profile?.username?.trim();
   },
 
-  /**
-   * HÀM CẬP NHẬT XP THEO NGÀY
-   * @param amount Số lượng XP cộng thêm (ví dụ: 10, 20)
-   */
   addXp: async (amount: number) => {
     const currentProfile = get().profile;
-    // Nếu chưa load profile thành công, không cho phép cộng XP
     if (!currentProfile) return false;
 
     set({ isLoading: true, error: null });
     try {
-      // 1. Lấy ngày hiện tại ở múi giờ địa phương (định dạng YYYY-MM-DD)
-      const today = new Date().toLocaleDateString('sv-SE'); // 'sv-SE' trả về định dạng YYYY-MM-DD trực tiếp
+      const today = new Date().toLocaleDateString('sv-SE'); 
+      const nowIso = new Date().toISOString();
 
-      // 2. Tính toán lượng XP mới
       const updatedTotalXp = currentProfile.totalXp + amount;
+      
       const updatedDailyXp = { ...currentProfile.dailyXp };
-      updatedDailyXp[today] = (updatedDailyXp[today] || 0) + amount;
+      
+      const currentDayLogs = Array.isArray(updatedDailyXp[today]) ? [...updatedDailyXp[today]] : [];
+
+      currentDayLogs.push({
+        timestamp: nowIso,
+        amount: amount
+      });
+      
+      updatedDailyXp[today] = currentDayLogs;
 
       const newProfileData: UserProfile = {
         ...currentProfile,
         totalXp: updatedTotalXp,
         dailyXp: updatedDailyXp,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
       };
 
-      // 3. Ghi trực tiếp vào file info.json của OPFS
       const root = await navigator.storage.getDirectory();
       const profileDir = await root.getDirectoryHandle("system-profile", { create: true });
       const fileHandle = await profileDir.getFileHandle("info.json", { create: true });
@@ -138,7 +152,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       await writable.write(JSON.stringify(newProfileData, null, 2));
       await writable.close();
 
-      // 4. Cập nhật ngược lại Zustand State để các UI lắng nghe cập nhật ngay lập tức
       set({ profile: newProfileData });
       return true;
     } catch (err: any) {
@@ -149,30 +162,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     }
   },
 
-  /**
-   * HÀM TÍNH TOÁN ĐỘNG LEVEL HIỆN TẠI
-   * Công thức lũy tiến: Level = căn_bậc_hai(Tổng_XP / 100) + 1
-   */
   getLevel: () => {
     const totalXp = get().profile?.totalXp || 0;
     if (totalXp <= 0) return 1;
     return Math.floor(Math.sqrt(totalXp / 100)) + 1;
   }
 }));
-
-// Hướng dẫn sử dụng cộng xp
-// export default function ActionButton() {
-//   const addXp = useProfileStore((state) => state.addXp);
-
-//   const handleCompleteTask = async () => {
-//     // Thực hiện logic của bạn...
-    
-//     // Cộng 50 XP cho người dùng vì đã hoàn thành nhiệm vụ
-//     const success = await addXp(50);
-//     if (success) {
-//       console.log("Chúc mừng! Bạn đã nhận được 50 XP.");
-//     }
-//   };
-
-//   return <button onClick={handleCompleteTask}>Hoàn thành nhiệm vụ</button>;
-// }

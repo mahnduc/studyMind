@@ -7,23 +7,23 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   output: 'export', 
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  // content: [
+  //   "./src/**/*.{js,ts,jsx,tsx,mdx}",
+  // ],
   basePath: isGithubActions ? `/${repoName}` : undefined,
   assetPrefix: isGithubActions ? `/${repoName}/` : undefined,
   trailingSlash: true,
   images: {
     unoptimized: true,
   },
-  turbo: {
-    rules: {
-      "*.sql": {
-        loaders: ["raw-loader"],
-        as: "*.js",
-      },
-    },
-  },
+  // turbo: {
+  //   rules: {
+  //     "*.sql": {
+  //       loaders: ["raw-loader"],
+  //       as: "*.js",
+  //     },
+  //   },
+  // },
 } as NextConfig;
 
 export default nextConfig;

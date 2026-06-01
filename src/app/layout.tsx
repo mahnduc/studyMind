@@ -7,6 +7,9 @@ const robotoMono = Roboto_Mono({
 });
 
 import type { Metadata } from "next";
+import EventEmitterInitializer from "@/components/EventEmitterInitializer";
+import LearningCoachPopup from "@/components/LearningCoachPopup";
+import FloatingChat from "@/components/floatingchat/FloatingChat";
 
 export const metadata: Metadata = {
   title: "Uxie Platform",
@@ -19,6 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" className={`${robotoMono.variable} dark`}>
       <body className="antialiased font-mono">
+          <EventEmitterInitializer />
+           <LearningCoachPopup />
+           <FloatingChat />
           {children}
       </body>
     </html>

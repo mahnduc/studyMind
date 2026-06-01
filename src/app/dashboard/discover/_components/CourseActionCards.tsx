@@ -40,21 +40,6 @@ export function CourseActionCards({
         </button>
       </div>
 
-      {/* <div className="col-span-12 md:col-span-6 bg-white border border-gray-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
-        <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-pink-500 mb-6">
-          <Pen size={22} strokeWidth={2} />
-        </div>
-        <h3 className="text-lg font-bold mb-2 text-gray-800 tracking-tight">Viết nội dung</h3>
-        <p className="text-gray-500 font-medium mb-8 text-sm flex-1">
-          Tự soạn thảo kiến thức trực tiếp trong trình duyệt.
-        </p>
-        <Link href="/simple" className="w-full">
-          <button className="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors">
-            Mở Editor <ChevronRight size={16} strokeWidth={2} />
-          </button>
-        </Link>
-      </div> */}
-
       <div className="col-span-12 md:col-span-6 border-2 border-dashed border-gray-200 p-6 rounded-3xl flex flex-col justify-center items-center text-center min-h-70 bg-gray-50/30">
         <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 mb-4 select-none">
           <Plus size={20} strokeWidth={2} />

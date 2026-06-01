@@ -20,7 +20,7 @@ export interface ToolDefinition {
     parameters: {
       type: "object";
       properties: Record<string, any>;
-      required?: string[]; // các tham số yêu cầu của riêng từng tool
+      required?: string[];
     };
   };
 }

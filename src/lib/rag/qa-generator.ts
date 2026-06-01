@@ -1,7 +1,6 @@
 import { keyApi } from "@/app/dashboard/settings/api-key/_api/key.api";
 import { readJsonFromOPFS } from "./search-logic";
 
-// Định nghĩa cấu trúc câu hỏi trắc nghiệm chuẩn
 export interface MCQQuestion {
   question: string;
   options: {
@@ -14,7 +13,6 @@ export interface MCQQuestion {
   chunkId: string;
 }
 
-// Định nghĩa cấu trúc file Quiz lưu trữ trong hệ thống
 export interface SavedQuizData {
   knowledgeBase: string;
   createdAt: string;
@@ -22,9 +20,6 @@ export interface SavedQuizData {
   questions: MCQQuestion[];
 }
 
-/**
- * Hàm helper xử lý ghi tệp cấu trúc JSON vào một thư mục cụ thể trong OPFS
- */
 async function saveQuizToOPFSDirectory(
   folderName: string,
   fileName: string,
@@ -97,31 +92,85 @@ export async function generateMCQBankFromOPFS(
     chunkIndex++;
 
     try {
-      const prompt = `You are an expert exam creator. Based on the provided Context, generate exactly ${questionsToAskFromThisChunk} multiple-choice question(s) in Vietnamese.
+      const prompt = `Bạn là chuyên gia ra đề thi ngôn ngữ. Phân tích Ngữ liệu bên dưới, sau đó tạo đúng ${questionsToAskFromThisChunk} câu hỏi trắc nghiệm.
 
-CRITICAL REQUIREMENTS:
-- Each question must have exactly 4 choices (A, B, C, D).
-- The "answer" field MUST strictly be one of the keys: "A", "B", "C", or "D".
-- The output MUST be a valid JSON object containing an "mcq_pairs" array.
-- Do NOT include any markdown formatting wrappers (like \`\`\`json ... \`\`\`), introduction, or extra explanation.
+BƯỚC 1 — XÁC ĐỊNH LOẠI NGỮ LIỆU:
+- Nếu ngữ liệu chứa từ vựng tiếng Anh, ngữ pháp, thành ngữ, hoặc giải thích ngôn ngữ → áp dụng QUY TẮC HỌC TIẾNG ANH
+- Trường hợp còn lại → áp dụng QUY TẮC KIẾN THỨC CHUNG
 
-Desired JSON Structure:
+---
+
+QUY TẮC HỌC TIẾNG ANH:
+Câu hỏi và đáp án đều viết bằng TIẾNG VIỆT.
+Ưu tiên các dạng câu hỏi:
+  + Từ vựng: "Từ '...' trong tiếng Anh có nghĩa là gì?", "Từ nào có nghĩa là '...'?"
+  + Ngữ pháp: mô tả tình huống bằng tiếng Việt, yêu cầu chọn cấu trúc/thì đúng (viết bằng tiếng Việt)
+  + Cụm từ: "Thành ngữ '...' có nghĩa là gì?", "Cụm từ nào diễn đạt nghĩa '...'?"
+  + Dịch thuật: "Câu/từ '...' dịch sang tiếng Việt là gì?"
+
+Ví dụ tốt (từ vựng):
+{
+  "question": "Từ 'resilient' trong tiếng Anh có nghĩa là gì?",
+  "options": { "A": "Dễ vỡ, mong manh", "B": "Kiên cường, không bị đánh gục", "C": "Bướng bỉnh, cứng đầu", "D": "Thụ động, thiếu chủ động" },
+  "answer": "B"
+}
+
+Ví dụ tốt (ngữ pháp):
+{
+  "question": "Khi diễn đạt hành động đã xảy ra và kéo dài trước một mốc thời gian trong quá khứ, ta dùng thì gì?",
+  "options": { "A": "Quá khứ đơn", "B": "Quá khứ tiếp diễn", "C": "Quá khứ hoàn thành tiếp diễn", "D": "Hiện tại hoàn thành" },
+  "answer": "C"
+}
+
+Ví dụ tốt (phrasal verb):
+{
+  "question": "Cụm động từ 'give up' có nghĩa là gì?",
+  "options": { "A": "Trao tặng ai đó thứ gì", "B": "Từ bỏ", "C": "Đầu hàng trước kẻ thù", "D": "Phân phát cho nhiều người" },
+  "answer": "B"
+}
+
+Ví dụ XẤU (TRÁNH):
+{
+  "question": "Theo đoạn văn trên, từ nào sau đây có nghĩa gần nhất với 'resilient' trong ngữ cảnh được đề cập?",
+  "options": { "A": "Đây là từ mang nghĩa dễ vỡ và mong manh", "B": "Từ này mang nghĩa kiên cường và không bị đánh gục bởi khó khăn", ... }
+}
+
+---
+
+QUY TẮC KIẾN THỨC CHUNG:
+- Câu hỏi và đáp án viết bằng TIẾNG VIỆT.
+- Hỏi về khái niệm, định nghĩa, nguyên nhân-kết quả, sự kiện chính.
+- Câu hỏi ngắn gọn, trực tiếp. KHÔNG dùng: "Theo đoạn văn...", "Câu nào sau đây đúng nhất...".
+- Đáp án song song về cấu trúc, súc tích, KHÔNG lặp lại thân câu hỏi.
+
+Ví dụ tốt:
+{
+  "question": "Chức năng chính của ty thể trong tế bào là gì?",
+  "options": { "A": "Tổng hợp protein", "B": "Sản xuất ATP", "C": "Tiêu hóa chất thải", "D": "Điều tiết chu kỳ tế bào" },
+  "answer": "B"
+}
+
+---
+
+QUY TẮC CHUNG CHO CẢ HAI LOẠI:
+- Đúng 4 lựa chọn (A, B, C, D) mỗi câu.
+- Trường "answer" phải là một trong: "A", "B", "C", "D".
+- Đáp án nhiễu phải sai rõ ràng nhưng dễ nhầm.
+- KHÔNG dùng mở đầu hoa mỹ, dài dòng cho câu hỏi.
+
+OUTPUT: JSON hợp lệ, KHÔNG bọc markdown, KHÔNG giải thích thêm.
+
 {
   "mcq_pairs": [
     {
-      "question": "Nội dung câu hỏi trắc nghiệm 1?",
-      "options": {
-        "A": "Đáp án lựa chọn A",
-        "B": "Đáp án lựa chọn B",
-        "C": "Đáp án lựa chọn C",
-        "D": "Đáp án lựa chọn D"
-      },
+      "question": "...",
+      "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
       "answer": "A"
     }
   ]
 }
 
-Context:
+Ngữ liệu:
 ${chunk.content}`;
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {

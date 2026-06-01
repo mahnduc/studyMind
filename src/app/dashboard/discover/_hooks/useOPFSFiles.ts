@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
 
 export function useOPFSFiles(directoryName: string = "system-raw-file") {
   const [files, setFiles] = useState<{ name: string; handle: FileSystemFileHandle }[]>([]);
@@ -9,7 +11,7 @@ export function useOPFSFiles(directoryName: string = "system-raw-file") {
     try {
       const root = await navigator.storage.getDirectory();
       const workspaceHandle = await root.getDirectoryHandle(directoryName, { create: true });
-      
+
       const fileList: { name: string; handle: FileSystemFileHandle }[] = [];
 
       for await (const entry of workspaceHandle.values()) {
@@ -36,7 +38,7 @@ export function useOPFSFiles(directoryName: string = "system-raw-file") {
       const root = await navigator.storage.getDirectory();
       const workspaceHandle = await root.getDirectoryHandle(directoryName);
       await workspaceHandle.removeEntry(name);
-      
+
       await loadFilesFromOPFS();
       if (onDeleted) onDeleted();
     } catch (error) {

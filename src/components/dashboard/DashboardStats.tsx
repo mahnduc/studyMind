@@ -1,14 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Award, TrendingUp, Flame, CalendarCheck, ChevronUp, ChevronsUp, Info } from "lucide-react";
+import { TrendingUp, ChevronsUp, Info } from "lucide-react";
 import { useProfileStore } from '@/stores/profileStore';
 import Link from 'next/link';
+
+// Cấu trúc XpLog mới từ Store của bạn
+interface XpLog {
+  timestamp: string;
+  amount: number;
+}
 
 interface HeatmapDay {
   dateKey: string;
   dayIdx: number;
-  xp: number;
+  // THAY ĐỔI: Chấp nhận cả số (bảo toàn cấu trúc cũ) hoặc mảng log chi tiết mới
+  xp: number | XpLog[]; 
   dayOfMonth: number;
   formattedDate: string;
 }
@@ -89,12 +96,21 @@ function HeatmapSection({
     (_, i) => today.getFullYear() - 2 + i
   );
 
-  const getXpColorClass = (xp: number | undefined) => {
-    if (xp === undefined) return 'bg-transparent border-transparent';
-    if (xp <= 0) return 'bg-white border border-[#EBEBEB] text-[#2D3436]/70';
-    if (xp < 30) return 'bg-[#00CEC9]/20 border border-[#00CEC9]/30 text-[#2D3436]';
-    if (xp < 60) return 'bg-[#00CEC9]/40 border border-[#00CEC9]/50 text-[#2D3436]';
-    if (xp < 100) return 'bg-[#00CEC9]/70 border border-[#00CEC9]/80 text-white';
+  // HÀM TIỆN ÍCH: Tính toán tổng lượng XP từ log hoặc số thông thường
+  const getDailyTotalXp = (xpData: number | XpLog[] | undefined): number => {
+    if (xpData === undefined) return 0;
+    if (typeof xpData === 'number') return xpData;
+    if (Array.isArray(xpData)) {
+      return xpData.reduce((sum, log) => sum + log.amount, 0);
+    }
+    return 0;
+  };
+
+  const getXpColorClass = (totalXp: number) => {
+    if (totalXp <= 0) return 'bg-white border border-[#EBEBEB] text-[#2D3436]/70';
+    if (totalXp < 30) return 'bg-[#00CEC9]/20 border border-[#00CEC9]/30 text-[#2D3436]';
+    if (totalXp < 60) return 'bg-[#00CEC9]/40 border border-[#00CEC9]/50 text-[#2D3436]';
+    if (totalXp < 100) return 'bg-[#00CEC9]/70 border border-[#00CEC9]/80 text-white';
     return 'bg-[#00CEC9] border border-[#00A8A5] shadow-[0_0_8px_rgba(0,206,201,0.2)] text-white';
   };
 
@@ -103,40 +119,40 @@ function HeatmapSection({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2D3436]/5 pb-3 shrink-0">
         <div className="flex items-center gap-2.5">
             <div className="p-2 bg-[#00CEC9]/10 rounded-xl text-[#00CEC9] shrink-0">
-            <TrendingUp size={18} />
+              <TrendingUp size={18} />
             </div>
             <div>
-            <h3 className="text-sm font-black text-[#2D3436] tracking-tight leading-none">
-                Tần Suất Học Tập
-            </h3>
-            <p className="text-xs text-[#2D3436]/60 mt-1">
-                Tiến độ chi tiết theo tháng
-            </p>
+              <h3 className="text-sm font-black text-[#2D3436] tracking-tight leading-none">
+                  Tần Suất Học Tập
+              </h3>
+              <p className="text-xs text-[#2D3436]/60 mt-1">
+                  Tiến độ chi tiết theo tháng
+              </p>
             </div>
         </div>
         <div className="flex items-center gap-1.5 bg-[#F7F9F8] p-1 rounded-lg border border-[#2D3436]/5 self-start sm:self-auto shrink-0">
             <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="bg-white text-xs font-bold text-[#2D3436] px-2.5 py-1 rounded-md border border-[#2D3436]/5 outline-none cursor-pointer focus:border-[#00CEC9]"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="bg-white text-xs font-bold text-[#2D3436] px-2.5 py-1 rounded-md border border-[#2D3436]/5 outline-none cursor-pointer focus:border-[#00CEC9]"
             >
-            {monthsArray.map((m) => (
-                <option key={m.value} value={m.value}>
-                {m.label}
-                </option>
-            ))}
+              {monthsArray.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+              ))}
             </select>
 
             <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="bg-white text-xs font-bold text-[#2D3436] px-2.5 py-1 rounded-md border border-[#2D3436]/5 outline-none cursor-pointer focus:border-[#00CEC9]"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="bg-white text-xs font-bold text-[#2D3436] px-2.5 py-1 rounded-md border border-[#2D3436]/5 outline-none cursor-pointer focus:border-[#00CEC9]"
             >
-            {yearsArray.map((y) => (
-                <option key={y} value={y}>
-                Năm {y}
-                </option>
-            ))}
+              {yearsArray.map((y) => (
+                  <option key={y} value={y}>
+                    Năm {y}
+                  </option>
+              ))}
             </select>
         </div>
         </div>
@@ -145,15 +161,15 @@ function HeatmapSection({
         
         <div className="flex items-center justify-between shrink-0">
             <span className="text-xs font-extrabold text-[#2D3436]/80 px-2.5 py-1 bg-white border border-[#2D3436]/5 rounded-md shadow-sm w-fit">
-            {monthLabel}
+              {monthLabel}
             </span>
 
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#2D3436]/50">
-            <div className="w-3 h-3 rounded-sm bg-white border border-[#EBEBEB]" />
-            <div className="w-3 h-3 rounded-sm bg-[#00CEC9]/20 border border-[#00CEC9]/30" />
-            <div className="w-3 h-3 rounded-sm bg-[#00CEC9]/40 border border-[#00CEC9]/50" />
-            <div className="w-3 h-3 rounded-sm bg-[#00CEC9]/70 border border-[#00CEC9]/80" />
-            <div className="w-3 h-3 rounded-sm bg-[#00CEC9]" />
+              <div className="w-3 h-3 rounded-sm bg-white border border-[#EBEBEB]" />
+              <div className="w-3 h-3 rounded-sm bg-[#00CEC9]/20 border border-[#00CEC9]/30" />
+              <div className="w-3 h-3 rounded-sm bg-[#00CEC9]/40 border border-[#00CEC9]/50" />
+              <div className="w-3 h-3 rounded-sm bg-[#00CEC9]/70 border border-[#00CEC9]/80" />
+              <div className="w-3 h-3 rounded-sm bg-[#00CEC9]" />
             </div>
         </div>
 
@@ -162,12 +178,12 @@ function HeatmapSection({
             <div className="grid grid-cols-7 gap-1.5 text-center mb-2 shrink-0">
             {daysOfWeekLabels.map((label, idx) => (
                 <span
-                key={idx}
-                className={`text-xs font-black uppercase tracking-wider ${
-                    idx === 0 ? 'text-[#FF4D4F]' : 'text-[#2D3436]/40'
-                }`}
+                  key={idx}
+                  className={`text-xs font-black uppercase tracking-wider ${
+                      idx === 0 ? 'text-[#FF4D4F]' : 'text-[#2D3436]/40'
+                  }`}
                 >
-                {label}
+                  {label}
                 </span>
             ))}
             </div>
@@ -175,22 +191,27 @@ function HeatmapSection({
             <div className="grid grid-cols-7 gap-1.5 flex-1 items-stretch content-stretch auto-rows-fr">
             {gridCells.map((dayItem, cellIdx) => {
                 if (!dayItem) {
-                return (
-                    <div
-                    key={`empty-${cellIdx}`}
-                    className="w-full h-full bg-transparent pointer-events-none"
-                    />
-                );
+                  return (
+                      <div
+                        key={`empty-${cellIdx}`}
+                        className="w-full h-full bg-transparent pointer-events-none"
+                      />
+                  );
                 }
 
+                // Tính tổng điểm trong ngày để phân cấp màu và hiển thị tooltip
+                const totalXpInDay = getDailyTotalXp(dayItem.xp);
+                // Đếm số lần cộng XP trong ngày
+                const clickCount = Array.isArray(dayItem.xp) ? dayItem.xp.length : (dayItem.xp > 0 ? 1 : 0);
+
                 return (
-                <div
-                    key={dayItem.dateKey}
-                    className={`w-full h-full rounded-lg transition-all duration-150 hover:scale-[1.03] cursor-pointer hover:shadow-md flex items-center justify-center text-xs sm:text-sm font-bold select-none ${getXpColorClass(dayItem.xp)}`}
-                    title={`${dayItem.formattedDate}: Tích lũy ${dayItem.xp} XP`}
-                >
-                    {dayItem.dayOfMonth}
-                </div>
+                  <div
+                      key={dayItem.dateKey}
+                      className={`w-full h-full rounded-lg transition-all duration-150 hover:scale-[1.03] cursor-pointer hover:shadow-md flex items-center justify-center text-xs sm:text-sm font-bold select-none ${getXpColorClass(totalXpInDay)}`}
+                      title={`${dayItem.formattedDate}: Tích lũy ${totalXpInDay} XP${clickCount > 0 ? ` (${clickCount} lần cộng)` : ''}`}
+                  >
+                      {dayItem.dayOfMonth}
+                  </div>
                 );
             })}
             </div>
@@ -213,15 +234,26 @@ function LevelSection({
   xpInCurrentLevel,
   progressPercentage,
 }: LevelSectionProps) {
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const { addXp } =  useProfileStore()
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const addXp = useProfileStore((state) => state.addXp);
+
   // Cấu hình cho vòng tròn SVG
   const radius = 40;
   const strokeDasharray = 2 * Math.PI * radius;
   const strokeDashoffset = strokeDasharray - (progressPercentage / 100) * strokeDasharray;
 
   const handleCheckIn = async () => {
-    await addXp(10);
+    if (isUpgrading) return;
+    setIsUpgrading(true);
+    
+    try {
+      // Gọi hàm của Store mới, tự động lưu log thời gian thực
+      await addXp(10); 
+    } catch (error) {
+      console.error("Lỗi tăng XP:", error);
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   return (
@@ -235,17 +267,12 @@ function LevelSection({
             Cấp độ hiện tại
           </span>
         </div>
-        {/* <div className="p-2 bg-white/5 border border-white/10 rounded-xl text-[#00CEC9] shrink-0">
-          <Award size={18} />
-        </div> */}
       </div>
 
       {/* Vòng Tròn Tiến Độ Trung Tâm */}
       <div className="flex-1 flex flex-col items-center justify-center my-4 z-10 relative">
         <div className="relative w-28 h-28 flex items-center justify-center">
-          {/* SVG Vòng Tròn Tiến Độ */}
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            {/* Vòng tròn nền phía sau */}
             <circle
               cx="50"
               cy="50"
@@ -254,12 +281,11 @@ function LevelSection({
               strokeWidth="6"
               fill="transparent"
             />
-            {/* Vòng tròn tiến độ chạy thực tế */}
             <circle
               cx="50"
               cy="50"
               r={radius}
-              className="stroke-[#00CEC9] transition-all duration-700 ease-out-back"
+              className="stroke-[#00CEC9] transition-all duration-700 ease-out"
               strokeWidth="6"
               fill="transparent"
               strokeDasharray={strokeDasharray}
@@ -282,29 +308,24 @@ function LevelSection({
           <div className="text-xs font-bold text-[#F7F9F8]">
             {xpInCurrentLevel} <span className="text-[#F7F9F8]/40">/ 100 XP</span>
           </div>
-          {/* <div className="text-[10px] text-slate-400 mt-0.5">
-            Tổng tích lũy: {totalXp} XP
-          </div> */}
         </div>
       </div>
 
       <div className="flex flex-col gap-3 z-10 shrink-0 border-t border-white/10 pt-3">
-        <button
+        {/* <button
           onClick={handleCheckIn}
-          className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 select-none active:scale-[0.98] ${
-            isCheckedIn
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default'
-              : 'bg-[#00CEC9] text-[#2D3436] hover:bg-[#00b8b5] hover:shadow-[0_0_12px_rgba(0,206,201,0.3)]'
-          }`}
+          disabled={isUpgrading}
+          className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 select-none active:scale-[0.98] bg-[#00CEC9] text-[#2D3436] hover:bg-[#00b8b5] hover:shadow-[0_0_12px_rgba(0,206,201,0.3)] disabled:opacity-50`}
         >
-          <ChevronsUp /> Nhấn để up cấp
-        </button>
+          <ChevronsUp className={isUpgrading ? "animate-bounce" : ""} size={16} /> 
+          {isUpgrading ? "Đang xử lý..." : "Nhấn để up cấp"}
+        </button> */}
 
         {/* Footer */}
         <div className="flex items-center justify-between text-[10px]">
           <div className="flex items-center gap-1 font-bold text-[#00CEC9]">
             <Link href="">
-            <Info size={12} />
+              <Info size={12} />
             </Link>
           </div>
           <span className="font-bold text-[#00CEC9]">
